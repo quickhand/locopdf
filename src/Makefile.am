@@ -1,5 +1,5 @@
 bin_PROGRAMS = locopdf
-locopdf_SOURCES = locopdf.cpp
+locopdf_SOURCES = locopdf.cpp keyhandler.cpp
 
 # set the include path found by configure
 INCLUDES= $(all_includes) @ECORE_CFLAGS@ @EPDF_CFLAGS@ @EVAS_CFLAGS@
