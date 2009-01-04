@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2008 by Marc Lajoie   *
- *   marc@gatherer   *
+ *   Copyright (C) 2008 by Marc Lajoie                                     *
+ *   quickhand@openinkpot.org                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -30,7 +31,7 @@
 #include <Ecore_Evas.h>
 #include <epdf/Epdf.h>
 #include "keyhandler.h"
-
+#include "dialogs.h"
 using namespace std;
 
 
@@ -47,6 +48,7 @@ int curpdfobj=1;
 int prerendering=0;
 int fitmode=0;  //0=none; 1=fit width; 2=fit height
 double zoom=1.0;
+double zoominc=0.1;
 int pan;
 
 
@@ -59,6 +61,7 @@ void render_cur_page()
     int width,height;
     epdf_page_size_get (page, &width, &height);
     epdf_page_scale_set (page,600.0/((double)width)*zoom,800.0/((double)height)*zoom);
+    //epdf_page_scale_set(page,zoom,zoom);
     epdf_page_render (page,pdfobj);
 }
 void *thread_func(void *vptr_args)
@@ -75,10 +78,24 @@ void *thread_func(void *vptr_args)
     int width,height;
     epdf_page_size_get (page, &width, &height);
     epdf_page_scale_set (page,600.0/((double)width)*zoom,800.0/((double)height)*zoom);
+    //epdf_page_scale_set(page,zoom,zoom);
     epdf_page_render (page,pdfobj);
     prerendering=0;
     return NULL;
 
+}
+void pan_cur_page(int panx,int pany)
+{
+    Evas_Object *pdfobj;
+    if(curpdfobj==1)
+        pdfobj=evas_object_name_find(evas,"pdfobj1");
+    else
+        pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+    int x,y,w,h;
+    evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+    evas_object_move (pdfobj,x+panx,y+pany);
+    
+    
 }
 void ensure_thread_dead()
 {
@@ -98,19 +115,21 @@ void prerender_next_page()
 
 void flip_pages()
 {
-    Evas_Object *pdfobj;
+    Evas_Object *active,*inactive;
     if(curpdfobj==1)
     {
-        pdfobj=evas_object_name_find(evas,"pdfobj2");
-        evas_object_raise(pdfobj);
+        active=evas_object_name_find(evas,"pdfobj1");
+        inactive=evas_object_name_find(evas,"pdfobj2");
         curpdfobj=2;
     }
     else
     {
-        pdfobj=evas_object_name_find(evas,"pdfobj1");
-        evas_object_raise(pdfobj);
+        active=evas_object_name_find(evas,"pdfobj2");
+        inactive=evas_object_name_find(evas,"pdfobj1");
         curpdfobj=1;
     }
+    evas_object_hide(active);
+    evas_object_show(inactive);
 }
 void next_page()
 {
@@ -130,7 +149,6 @@ void prev_page()
         return;
     curpage--;
     render_cur_page();
-    
     prerender_next_page();
 }
 
@@ -145,7 +163,9 @@ void main_esc(Evas *e, Evas_Object *obj)
 
 void main_ok(Evas *e, Evas_Object *obj)
 {
-    
+    Evas_Object *bgobj=evas_object_name_find(evas,"background");
+    PreferencesDialog(evas,bgobj);
+    fprintf(stderr,"bla");
 }
 
 void main_shift(Evas *e, Evas_Object *obj)
@@ -187,8 +207,54 @@ void main_nav_menubtn(Evas *e, Evas_Object *obj)
 }
 void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
 {
-    
-    
+    int paninc=5;
+    if(index==1)
+    {
+        pan_cur_page((-1)*paninc,0);
+    }
+    else if(index==2)
+    {
+        pan_cur_page(paninc,0);
+        
+    }
+    else if(index==3)
+    {
+        pan_cur_page(0,paninc);
+        
+    }
+    else if(index==4)
+    {
+        pan_cur_page(0,(-1)*paninc);
+        
+    }
+    else if(index==7)
+    {
+        if((zoom-zoominc)>0)
+        {
+            zoom-=zoominc;
+            render_cur_page();
+            prerender_next_page();
+
+        }
+        
+    }
+    else if(index==8)
+    {
+        zoom+=zoominc;
+        render_cur_page();
+        prerender_next_page();
+
+        
+    }
+    else if(index==9)
+    {
+        prev_page();    
+        
+    }
+    else if(index==0)
+    {
+        next_page();    
+    }
 }
 
 static key_handler_info_t main_info =
@@ -221,6 +287,10 @@ int main(int argc, char *argv[])
 
     /* create our Ecore_Evas and show it */
     ee = ecore_evas_software_x11_new(0, 0, 0, 0, 600, 800);
+    
+    
+    ecore_evas_borderless_set(ee, 0);
+    ecore_evas_shaped_set(ee, 0);
     ecore_evas_title_set(ee, "LoCoPDF");
     ecore_evas_show(ee);
 
@@ -259,7 +329,7 @@ int main(int argc, char *argv[])
     o2 = evas_object_image_add (evas);
     evas_object_move (o2, 0, 0);
     evas_object_name_set(o2, "pdfobj2");
-    evas_object_show (o2);
+    //evas_object_show (o2);
 
     o1 = evas_object_image_add (evas);
     evas_object_move (o1, 0, 0);
@@ -275,6 +345,8 @@ int main(int argc, char *argv[])
 
     /* when the main event loop exits, shutdown our libraries */
     evas_object_del (o1);
+    evas_object_del (o2);
+    evas_object_del (bg);
     epdf_page_delete (page);
     epdf_document_delete (document);
 
