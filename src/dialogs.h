@@ -23,5 +23,5 @@
 #include <Evas.h>
 
 void PreferencesDialog(Evas *e, Evas_Object *obj);
-
+void ZoomEntry(Evas *e, Evas_Object *obj);
 #endif

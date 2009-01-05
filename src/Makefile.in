@@ -46,7 +46,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_locopdf_OBJECTS = locopdf.$(OBJEXT) keyhandler.$(OBJEXT) \
-	choicebox.$(OBJEXT) dialogs.$(OBJEXT)
+	choicebox.$(OBJEXT) entrybox.$(OBJEXT) dialogs.$(OBJEXT)
 locopdf_OBJECTS = $(am_locopdf_OBJECTS)
 locopdf_LDADD = $(LDADD)
 locopdf_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -95,6 +95,8 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 ECORE_CFLAGS = @ECORE_CFLAGS@
 ECORE_LIBS = @ECORE_LIBS@
+EDJE_CFLAGS = @EDJE_CFLAGS@
+EDJE_LIBS = @EDJE_LIBS@
 EGREP = @EGREP@
 EPDF_CFLAGS = @EPDF_CFLAGS@
 EPDF_LIBS = @EPDF_LIBS@
@@ -189,13 +191,13 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-locopdf_SOURCES = locopdf.cpp keyhandler.cpp choicebox.cpp dialogs.cpp
+locopdf_SOURCES = locopdf.cpp keyhandler.cpp choicebox.cpp entrybox.cpp dialogs.cpp
 
 # set the include path found by configure
-INCLUDES = $(all_includes) @ECORE_CFLAGS@ @EPDF_CFLAGS@ @EVAS_CFLAGS@
+INCLUDES = $(all_includes) @ECORE_CFLAGS@ @EDJE_CFLAGS@ @EPDF_CFLAGS@ @EVAS_CFLAGS@
 
 # the library search path.
-locopdf_LDFLAGS = $(all_libraries) @ECORE_LIBS@ @EVAS_LIBS@ @EPDF_LIBS@ -lecore_evas
+locopdf_LDFLAGS = $(all_libraries) @ECORE_LIBS@ @EVAS_LIBS@ @EDJE_LIBS@ @EPDF_LIBS@ -lecore_evas
 all: all-am
 
 .SUFFIXES:
@@ -269,6 +271,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/choicebox.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dialogs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/entrybox.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keyhandler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locopdf.Po@am__quote@
 

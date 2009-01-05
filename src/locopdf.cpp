@@ -29,9 +29,13 @@
 #include <Evas.h>
 #include <Ecore.h>
 #include <Ecore_Evas.h>
+#include <Edje.h>
 #include <epdf/Epdf.h>
 #include "keyhandler.h"
 #include "dialogs.h"
+#include "locopdf.h"
+#define REL_THEME "themes/themes_oitheme.edj"
+
 using namespace std;
 
 
@@ -49,8 +53,57 @@ int prerendering=0;
 int fitmode=0;  //0=none; 1=fit width; 2=fit height
 double zoom=1.0;
 double zoominc=0.1;
-int pan;
+double hpaninc=0.5;
+double vpaninc=0.5;
 
+int winwidth=600;
+int winheight=800;
+/*
+ * Returns edje theme file name.
+ */
+ 
+char *get_theme_file()
+{
+ 	char *cwd = get_current_dir_name();
+	char *rel_theme;
+	//asprintf(&rel_theme, "%s/%s", "/usr/share/locopdf", REL_THEME);
+    asprintf(&rel_theme, "%s/%s",cwd, REL_THEME);
+	free(cwd);
+	return rel_theme;
+}
+
+int get_win_width()
+{
+    return winwidth;    
+}
+int get_win_height()
+{
+    return winheight;    
+}
+double get_zoom_inc()
+{
+    return zoominc;    
+}
+void set_zoom_inc(double newzoominc)
+{
+    zoominc=newzoominc;    
+}
+double get_hpan_inc()
+{
+    return hpaninc;    
+}
+void set_hpan_inc(double newhpaninc)
+{
+    hpaninc=newhpaninc;    
+}
+double get_vpan_inc()
+{
+    return vpaninc;    
+}
+void set_vpan_inc(double newvpaninc)
+{
+    vpaninc=newvpaninc;    
+}
 
 void render_cur_page()
 {
@@ -60,7 +113,7 @@ void render_cur_page()
     epdf_page_page_set(page,curpage);
     int width,height;
     epdf_page_size_get (page, &width, &height);
-    epdf_page_scale_set (page,600.0/((double)width)*zoom,800.0/((double)height)*zoom);
+    epdf_page_scale_set (page,((double)get_win_width())/((double)width)*zoom,((double)get_win_height())/((double)height)*zoom);
     //epdf_page_scale_set(page,zoom,zoom);
     epdf_page_render (page,pdfobj);
 }
@@ -77,7 +130,7 @@ void *thread_func(void *vptr_args)
     epdf_page_page_set(page,curpage+1);
     int width,height;
     epdf_page_size_get (page, &width, &height);
-    epdf_page_scale_set (page,600.0/((double)width)*zoom,800.0/((double)height)*zoom);
+    epdf_page_scale_set (page,((double)get_win_width())/((double)width)*zoom,((double)get_win_height())/((double)height)*zoom);
     //epdf_page_scale_set(page,zoom,zoom);
     epdf_page_render (page,pdfobj);
     prerendering=0;
@@ -96,6 +149,24 @@ void pan_cur_page(int panx,int pany)
     evas_object_move (pdfobj,x+panx,y+pany);
     
     
+}
+void reset_cur_panning()
+{
+    Evas_Object *pdfobj;
+    if(curpdfobj==1)
+        pdfobj=evas_object_name_find(evas,"pdfobj1");
+    else
+        pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+    evas_object_move (pdfobj,0,0);    
+}
+void reset_next_panning()
+{
+    Evas_Object *pdfobj;
+    if(curpdfobj==1)
+        pdfobj=evas_object_name_find(evas,"pdfobj2");
+    else
+        pdfobj=evas_object_name_find(evas,"pdfobj1"); 
+    evas_object_move (pdfobj,0,0);    
 }
 void ensure_thread_dead()
 {
@@ -138,6 +209,7 @@ void next_page()
     curpage++;
     //pthread_join(thread, NULL);
     ensure_thread_dead();
+    reset_next_panning();
     flip_pages();
     prerender_next_page();
 
@@ -148,7 +220,9 @@ void prev_page()
     if(curpage<=0)
         return;
     curpage--;
+    reset_cur_panning();
     render_cur_page();
+    
     prerender_next_page();
 }
 
@@ -165,7 +239,7 @@ void main_ok(Evas *e, Evas_Object *obj)
 {
     Evas_Object *bgobj=evas_object_name_find(evas,"background");
     PreferencesDialog(evas,bgobj);
-    fprintf(stderr,"bla");
+    
 }
 
 void main_shift(Evas *e, Evas_Object *obj)
@@ -207,24 +281,24 @@ void main_nav_menubtn(Evas *e, Evas_Object *obj)
 }
 void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
 {
-    int paninc=5;
+    //int paninc=5;
     if(index==1)
     {
-        pan_cur_page((-1)*paninc,0);
+        pan_cur_page((int)((-1)*((double)get_win_width())*hpaninc),0);
     }
     else if(index==2)
     {
-        pan_cur_page(paninc,0);
+        pan_cur_page((int)(((double)get_win_width())*hpaninc),0);
         
     }
     else if(index==3)
     {
-        pan_cur_page(0,paninc);
+        pan_cur_page(0,(int)(((double)get_win_height())*vpaninc));
         
     }
     else if(index==4)
     {
-        pan_cur_page(0,(-1)*paninc);
+        pan_cur_page(0,(int)((-1)*((double)get_win_height())*vpaninc));
         
     }
     else if(index==7)
@@ -284,7 +358,7 @@ int main(int argc, char *argv[])
     evas_init();
     ecore_init();
     ecore_evas_init();
-
+    edje_init();
     /* create our Ecore_Evas and show it */
     ee = ecore_evas_software_x11_new(0, 0, 0, 0, 600, 800);
     
@@ -350,7 +424,7 @@ int main(int argc, char *argv[])
     epdf_page_delete (page);
     epdf_document_delete (document);
 
-
+    edje_shutdown();
     ecore_evas_shutdown();
     ecore_shutdown();
     evas_shutdown();
