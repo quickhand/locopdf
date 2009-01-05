@@ -64,11 +64,11 @@ int winheight=800;
  
 char *get_theme_file()
 {
- 	char *cwd = get_current_dir_name();
+ 	//char *cwd = get_current_dir_name();
 	char *rel_theme;
-	//asprintf(&rel_theme, "%s/%s", "/usr/share/locopdf", REL_THEME);
-    asprintf(&rel_theme, "%s/%s",cwd, REL_THEME);
-	free(cwd);
+	asprintf(&rel_theme, "%s/%s", "/usr/share/locopdf", REL_THEME);
+    //asprintf(&rel_theme, "%s/%s",cwd, REL_THEME);
+	//free(cwd);
 	return rel_theme;
 }
 
