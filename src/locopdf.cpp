@@ -183,7 +183,7 @@ void *thread_func(void *vptr_args)
     int width,height;
     epdf_page_size_get (page, &width, &height);
     //epdf_page_scale_set (page,((double)get_win_width())/((double)width)*zoom,((double)get_win_height())/((double)height)*zoom);
-    double fitwidthzoom=((double)get_win_width())/((double)(width-righttrim))*zoom;
+    double fitwidthzoom=((double)get_win_width())/((double)(width-lefttrim-righttrim))*zoom;
     double fitheightzoom=((double)get_win_height())/((double)(height-toptrim-bottomtrim))*zoom;
     
     epdf_page_scale_set (page,fitwidthzoom,fitwidthzoom);
