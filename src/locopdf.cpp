@@ -366,6 +366,11 @@ void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
         pan_cur_page(0,(int)((-1)*((double)get_win_height())*vpaninc));
         
     }
+    else if(index==5)
+    {
+        reset_cur_panning();
+        
+    }
     else if(index==7)
     {
         if((zoom-zoominc)>0)
