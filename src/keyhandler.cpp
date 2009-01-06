@@ -57,6 +57,15 @@ static void _key_handler(void *data, Evas *evas, Evas_Object *obj, void *event_i
 		//	lp = true;
 		HANDLE_ITEM(item_handler, k[0]-'0', lp)
 	}
+    else if (k[0]=='K' && k[1]=='P')
+    {
+        if (isdigit(k[3]) && !k[4]) {
+            bool lp = false;
+            //if(e->modifiers & EWL_KEY_MODIFIER_ALT)
+            //	lp = true;
+            HANDLE_ITEM(item_handler, k[3]-'0', lp)
+        }
+    }
     else if (!strcmp(k,"Up")) {
         if(nav_mode == 1)            HANDLE_KEY(nav_up_handler)
         else                         HANDLE_KEY(nav_right_handler)

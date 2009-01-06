@@ -155,6 +155,7 @@ void render_cur_page()
     double fitheightzoom=((double)get_win_height())/((double)(height-toptrim-bottomtrim))*zoom;
     
     epdf_page_scale_set (page,fitwidthzoom,fitwidthzoom);
+    //epdf_page_scale_set (page,1.0,1.0);
     //epdf_page_scale_set(page,zoom,zoom);
     if(!lefttrim && !righttrim && !toptrim && !bottomtrim)
     {
@@ -166,6 +167,7 @@ void render_cur_page()
                              
         
     }
+    //fprintf(stderr,"\nwidth=%d,height=%d,ltrim=%d,rtrim=%d,ttrim=%d,btrim=%d,fwzoom=%f,fhzoom=%f\n",width,height,lefttrim,righttrim,toptrim,bottomtrim,fitwidthzoom,fitheightzoom);
 }
 void *thread_func(void *vptr_args)
 {
@@ -181,7 +183,7 @@ void *thread_func(void *vptr_args)
     int width,height;
     epdf_page_size_get (page, &width, &height);
     //epdf_page_scale_set (page,((double)get_win_width())/((double)width)*zoom,((double)get_win_height())/((double)height)*zoom);
-    double fitwidthzoom=((double)get_win_width())/((double)(width-lefttrim-righttrim))*zoom;
+    double fitwidthzoom=((double)get_win_width())/((double)(width-righttrim))*zoom;
     double fitheightzoom=((double)get_win_height())/((double)(height-toptrim-bottomtrim))*zoom;
     
     epdf_page_scale_set (page,fitwidthzoom,fitwidthzoom);
@@ -192,7 +194,7 @@ void *thread_func(void *vptr_args)
     }
     else
     {
-        epdf_page_render_slice (page,pdfobj,lefttrim,toptrim,width-lefttrim-righttrim,height-toptrim-bottomtrim);
+        epdf_page_render_slice (page,pdfobj,lefttrim,toptrim,width-righttrim,height-toptrim-bottomtrim);
                              
         
     }
