@@ -27,7 +27,7 @@
 #include <cstdlib>
 #include <cstring>
 
-Evas_Object *preferenceschoicebox,*zoomentrybox,*hpanentrybox,*vpanentrybox,*trimmingchoicebox;
+Evas_Object *preferenceschoicebox,*zoomentrybox,*hpanentrybox,*vpanentrybox,*trimmingchoicebox,*lefttrimentrybox,*righttrimentrybox,*toptrimentrybox,*bottomtrimentrybox;
 //hpan entrybox
 void hpan_entryhandler(Evas *e, Evas_Object *obj,char *value)
 {
@@ -91,12 +91,130 @@ void ZoomEntry(Evas *e, Evas_Object *obj,const char *startval)
     
 }
 
+//left trimming entrybox
+void lefttrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
+{
+    if(value)
+    {
+        long numval=strtol(value,NULL,10);
+        set_lefttrim((int)numval);
+        update_label(e,trimmingchoicebox,0,value);
+        free(value);
+        render_cur_page();
+        prerender_next_page();
+    }
+}
 
+void LeftTrimEntry(Evas *e, Evas_Object *obj,const char *startval)
+{
+    lefttrimentrybox=init_entrybox(e,"Left Trimming.",startval,3,lefttrim_entryhandler,obj);
+    int x,y,w,h;
+    evas_object_geometry_get(lefttrimentrybox,&x,&y,&w,&h);
+    evas_object_move(lefttrimentrybox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
+    
+}
+//right trimming entrybox
+void righttrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
+{
+    if(value)
+    {
+        long numval=strtol(value,NULL,10);
+        set_righttrim((int)numval);
+        update_label(e,trimmingchoicebox,1,value);
+        free(value);
+        render_cur_page();
+        prerender_next_page();
+    }
+}
+
+void RightTrimEntry(Evas *e, Evas_Object *obj,const char *startval)
+{
+    righttrimentrybox=init_entrybox(e,"Right Trimming.",startval,3,righttrim_entryhandler,obj);
+    int x,y,w,h;
+    evas_object_geometry_get(righttrimentrybox,&x,&y,&w,&h);
+    evas_object_move(righttrimentrybox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
+    
+}
+//top trimming entrybox
+void toptrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
+{
+    if(value)
+    {
+        long numval=strtol(value,NULL,10);
+        set_toptrim((int)numval);
+        update_label(e,trimmingchoicebox,2,value);
+        free(value);
+        render_cur_page();
+        prerender_next_page();
+    }
+}
+
+void TopTrimEntry(Evas *e, Evas_Object *obj,const char *startval)
+{
+    toptrimentrybox=init_entrybox(e,"Top Trimming.",startval,3,toptrim_entryhandler,obj);
+    int x,y,w,h;
+    evas_object_geometry_get(toptrimentrybox,&x,&y,&w,&h);
+    evas_object_move(toptrimentrybox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
+    
+}
+//bottom trimming entrybox
+void bottomtrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
+{
+    if(value)
+    {
+        long numval=strtol(value,NULL,10);
+        set_bottomtrim((int)numval);
+        update_label(e,trimmingchoicebox,3,value);
+        free(value);
+        render_cur_page();
+        prerender_next_page();
+    }
+}
+
+void BottomTrimEntry(Evas *e, Evas_Object *obj,const char *startval)
+{
+    bottomtrimentrybox=init_entrybox(e,"Bottom Trimming.",startval,3,bottomtrim_entryhandler,obj);
+    int x,y,w,h;
+    evas_object_geometry_get(bottomtrimentrybox,&x,&y,&w,&h);
+    evas_object_move(bottomtrimentrybox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
+    
+}
 // trimming choicebox
 
 void trimming_choicehandler(Evas *e, Evas_Object *parent,int choice, bool lp)
 {
-    
+    if(choice==0)
+    {
+        char *startval;
+        asprintf(&startval,"%d",get_lefttrim());
+        LeftTrimEntry(e,parent,startval);    
+        free(startval);
+        
+    }
+    else if(choice==1)
+    {
+        char *startval;
+        asprintf(&startval,"%d",get_righttrim());
+        RightTrimEntry(e,parent,startval);    
+        free(startval);
+        
+    }
+    else if(choice==2)
+    {
+        char *startval;
+        asprintf(&startval,"%d",get_toptrim());
+        TopTrimEntry(e,parent,startval);    
+        free(startval);
+        
+    }
+    else if(choice==3)
+    {
+        char *startval;
+        asprintf(&startval,"%d",get_bottomtrim());
+        BottomTrimEntry(e,parent,startval);    
+        free(startval);
+        
+    }
 }
 
 void TrimmingDialog(Evas *e, Evas_Object *obj)
@@ -108,12 +226,16 @@ void TrimmingDialog(Evas *e, Evas_Object *obj)
 		"4. Bottom Trimming",
 	};
 
-    
+    char *lefttrim,*righttrim,*toptrim,*bottomtrim;
+    asprintf(&lefttrim,"%d",get_lefttrim());
+    asprintf(&righttrim,"%d",get_righttrim());
+    asprintf(&toptrim,"%d",get_toptrim());
+    asprintf(&bottomtrim,"%d",get_bottomtrim());
 	const char *values[] = {
-		"",	
-		"",
-		"",
-		"",
+		lefttrim,	
+		righttrim,
+		toptrim,
+		bottomtrim,
 	};
     
 	trimmingchoicebox=init_choicebox(e,initchoices, values, 4, trimming_choicehandler, "Settings",obj, true);
@@ -121,7 +243,10 @@ void TrimmingDialog(Evas *e, Evas_Object *obj)
     int x,y,w,h;
     evas_object_geometry_get(trimmingchoicebox,&x,&y,&w,&h);
     evas_object_move(trimmingchoicebox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
-    
+    free(lefttrim);
+    free(righttrim);
+    free(toptrim);
+    free(bottomtrim);
 }
 // Options dialogs
 
@@ -179,7 +304,6 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
 	};
     
 	preferenceschoicebox=init_choicebox(e,initchoices, values, 4, preferences_choicehandler, "Settings",obj, true);
-    
     int x,y,w,h;
     evas_object_geometry_get(preferenceschoicebox,&x,&y,&w,&h);
     evas_object_move(preferenceschoicebox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));

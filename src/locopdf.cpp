@@ -56,6 +56,13 @@ double zoominc=0.1;
 double hpaninc=0.5;
 double vpaninc=0.5;
 
+int lefttrim=0;
+int righttrim=0;
+int toptrim=0;
+int bottomtrim=0;
+
+
+
 int winwidth=600;
 int winheight=800;
 /*
@@ -104,7 +111,38 @@ void set_vpan_inc(double newvpaninc)
 {
     vpaninc=newvpaninc;    
 }
-
+int get_lefttrim()
+{
+    return lefttrim;    
+}
+void set_lefttrim(int newlefttrim)
+{
+    lefttrim=newlefttrim;    
+}
+int get_righttrim()
+{
+    return righttrim;    
+}
+void set_righttrim(int newrighttrim)
+{
+    righttrim=newrighttrim;    
+}
+int get_toptrim()
+{
+    return toptrim;    
+}
+void set_toptrim(int newtoptrim)
+{
+    toptrim=newtoptrim;    
+}
+int get_bottomtrim()
+{
+    return bottomtrim;    
+}
+void set_bottomtrim(int newbottomtrim)
+{
+    bottomtrim=newbottomtrim;    
+}
 void render_cur_page()
 {
     char pdfobjstr[20];
@@ -113,9 +151,21 @@ void render_cur_page()
     epdf_page_page_set(page,curpage);
     int width,height;
     epdf_page_size_get (page, &width, &height);
-    epdf_page_scale_set (page,((double)get_win_width())/((double)width)*zoom,((double)get_win_height())/((double)height)*zoom);
+    double fitwidthzoom=((double)get_win_width())/((double)(width-lefttrim-righttrim))*zoom;
+    double fitheightzoom=((double)get_win_height())/((double)(height-toptrim-bottomtrim))*zoom;
+    
+    epdf_page_scale_set (page,fitwidthzoom,fitwidthzoom);
     //epdf_page_scale_set(page,zoom,zoom);
-    epdf_page_render (page,pdfobj);
+    if(!lefttrim && !righttrim && !toptrim && !bottomtrim)
+    {
+        epdf_page_render (page,pdfobj);
+    }
+    else
+    {
+        epdf_page_render_slice (page,pdfobj,lefttrim,toptrim,width-lefttrim-righttrim,height-toptrim-bottomtrim);
+                             
+        
+    }
 }
 void *thread_func(void *vptr_args)
 {
@@ -130,10 +180,23 @@ void *thread_func(void *vptr_args)
     epdf_page_page_set(page,curpage+1);
     int width,height;
     epdf_page_size_get (page, &width, &height);
-    epdf_page_scale_set (page,((double)get_win_width())/((double)width)*zoom,((double)get_win_height())/((double)height)*zoom);
+    //epdf_page_scale_set (page,((double)get_win_width())/((double)width)*zoom,((double)get_win_height())/((double)height)*zoom);
+    double fitwidthzoom=((double)get_win_width())/((double)(width-lefttrim-righttrim))*zoom;
+    double fitheightzoom=((double)get_win_height())/((double)(height-toptrim-bottomtrim))*zoom;
+    
+    epdf_page_scale_set (page,fitwidthzoom,fitwidthzoom);
     //epdf_page_scale_set(page,zoom,zoom);
-    epdf_page_render (page,pdfobj);
-    prerendering=0;
+    if(!lefttrim && !righttrim && !toptrim && !bottomtrim)
+    {
+        epdf_page_render (page,pdfobj);
+    }
+    else
+    {
+        epdf_page_render_slice (page,pdfobj,lefttrim,toptrim,width-lefttrim-righttrim,height-toptrim-bottomtrim);
+                             
+        
+    }
+    
     return NULL;
 
 }
