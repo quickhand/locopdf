@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <cmath>
 #include <Evas.h>
 #include <Ecore.h>
 #include <Ecore_Evas.h>
@@ -35,6 +36,8 @@
 #include "dialogs.h"
 #include "locopdf.h"
 #define REL_THEME "themes/themes_oitheme.edj"
+
+#define ROUND(f) (int)floor(f + 0.5)
 
 using namespace std;
 
@@ -211,10 +214,23 @@ void pan_cur_page(int panx,int pany)
         pdfobj=evas_object_name_find(evas,"pdfobj2"); 
     int x,y,w,h;
     evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
-    evas_object_move (pdfobj,x+panx,y+pany);
+    //check range
+    int inrange=0;
+    if((x+panx)>=0 && (x+panx)<get_win_width() && (y+pany)>=0 && (y+pany)<get_win_height())
+        inrange=1;
+    else if((x+w+panx)>=0 && (x+w+panx)<get_win_width() && (y+pany)>=0 && (y+pany)<get_win_height())
+        inrange=1;
+    else if((x+panx)>=0 && (x+panx)<get_win_width() && (y+h+pany)>=0 && (y+h+pany)<get_win_height())
+        inrange=1;
+    else if((x+w+panx)>=0 && (x+w+panx)<get_win_width() && (y+h+pany)>=0 && (y+h+pany)<get_win_height())
+        inrange=1;
     
-    
+    if(((x+panx)<=0 && (x+w+panx)<=0) || ((y+pany)<=0&& (y+h+pany)<=0) || ((x+panx)>=get_win_width() && (x+w+panx)>=get_win_width()) || ((y+pany)>=get_win_height()&& (y+h+pany)>=get_win_height())) 
+        inrange=0;
+    if(inrange)
+        evas_object_move (pdfobj,x+panx,y+pany);
 }
+
 void reset_cur_panning()
 {
     Evas_Object *pdfobj;
@@ -349,21 +365,21 @@ void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
     //int paninc=5;
     if(index==1)
     {
-        pan_cur_page((int)((-1)*((double)get_win_width())*hpaninc),0);
+        pan_cur_page((-1)*ROUND(((double)get_win_width())*hpaninc),0);
     }
     else if(index==2)
     {
-        pan_cur_page((int)(((double)get_win_width())*hpaninc),0);
+        pan_cur_page(ROUND(((double)get_win_width())*hpaninc),0);
         
     }
     else if(index==3)
     {
-        pan_cur_page(0,(int)(((double)get_win_height())*vpaninc));
+        pan_cur_page(0,ROUND(((double)get_win_height())*vpaninc));
         
     }
     else if(index==4)
     {
-        pan_cur_page(0,(int)((-1)*((double)get_win_height())*vpaninc));
+        pan_cur_page(0,(-1)*ROUND(((double)get_win_height())*vpaninc));
         
     }
     else if(index==5)
@@ -482,7 +498,7 @@ int main(int argc, char *argv[])
 
     render_cur_page();
     prerender_next_page();
-
+    
 
     /* start the main event loop */
     ecore_main_loop_begin();
