@@ -194,11 +194,11 @@ void *thread_func(void *vptr_args)
     }
     else
     {
-        epdf_page_render_slice (page,pdfobj,lefttrim,toptrim,width-righttrim,height-toptrim-bottomtrim);
+        epdf_page_render_slice (page,pdfobj,(int)(((double)lefttrim)*fitwidthzoom),(int)(((double)toptrim)*fitwidthzoom),(int)(((double)(width-lefttrim-righttrim))*fitwidthzoom),(int)(((double)(height-toptrim-bottomtrim))*fitwidthzoom));
                              
         
     }
-    
+    prerendering=0;
     return NULL;
 
 }
