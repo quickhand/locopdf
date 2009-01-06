@@ -198,7 +198,7 @@ void *thread_func(void *vptr_args)
                              
         
     }
-    prerendering=0;
+    //prerendering=0;
     return NULL;
 
 }
