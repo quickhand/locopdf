@@ -34,9 +34,15 @@ void hpan_entryhandler(Evas *e, Evas_Object *obj,char *value)
     if(value)
     {
         long numval=strtol(value,NULL,10);
-        set_hpan_inc(((double)numval)/100.0);
-        reset_cur_panning();
-        update_label(e,preferenceschoicebox,0,value);
+        if(numval>0 && numval<=100)
+        {
+            set_hpan_inc(((double)numval)/100.0);
+            reset_cur_panning();
+            char *tempo;
+            asprintf(&tempo,"%s%%",value);
+            update_label(e,preferenceschoicebox,0,tempo);
+            free(tempo);
+        }
         free(value);
     }
 }
@@ -55,9 +61,15 @@ void vpan_entryhandler(Evas *e, Evas_Object *obj,char *value)
     if(value)
     {
         long numval=strtol(value,NULL,10);
-        set_vpan_inc(((double)numval)/100.0);
-        reset_cur_panning();
-        update_label(e,preferenceschoicebox,1,value);
+        if(numval>0 && numval<=100)
+        {
+            set_vpan_inc(((double)numval)/100.0);
+            reset_cur_panning();
+            char *tempo;
+            asprintf(&tempo,"%s%%",value);
+            update_label(e,preferenceschoicebox,1,tempo);
+            free(tempo);
+        }
         free(value);
     }
 }
@@ -76,8 +88,14 @@ void zoom_entryhandler(Evas *e, Evas_Object *obj,char *value)
     if(value)
     {
         long numval=strtol(value,NULL,10);
-        set_zoom_inc(((double)numval)/100.0);
-        update_label(e,preferenceschoicebox,3,value);
+        if(numval>0 && numval<=100)
+        {
+            set_zoom_inc(((double)numval)/100.0);
+            char *tempo;
+            asprintf(&tempo,"%s%%",value);
+            update_label(e,preferenceschoicebox,3,tempo);
+            free(tempo);
+        }
         free(value);
     }
 }
@@ -98,11 +116,15 @@ void lefttrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
     {
         long numval=strtol(value,NULL,10);
         set_lefttrim((int)numval);
-        update_label(e,trimmingchoicebox,0,value);
+        char *tempo;
+        asprintf(&tempo,"%spx",value);
+        update_label(e,trimmingchoicebox,0,tempo);
+        free(tempo);
         free(value);
         render_cur_page();
         prerender_next_page();
     }
+    
 }
 
 void LeftTrimEntry(Evas *e, Evas_Object *obj,const char *startval)
@@ -120,7 +142,10 @@ void righttrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
     {
         long numval=strtol(value,NULL,10);
         set_righttrim((int)numval);
-        update_label(e,trimmingchoicebox,1,value);
+        char *tempo;
+        asprintf(&tempo,"%spx",value);
+        update_label(e,trimmingchoicebox,1,tempo);
+        free(tempo);
         free(value);
         render_cur_page();
         prerender_next_page();
@@ -142,7 +167,10 @@ void toptrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
     {
         long numval=strtol(value,NULL,10);
         set_toptrim((int)numval);
-        update_label(e,trimmingchoicebox,2,value);
+        char *tempo;
+        asprintf(&tempo,"%spx",value);
+        update_label(e,trimmingchoicebox,2,tempo);
+        free(tempo);
         free(value);
         render_cur_page();
         prerender_next_page();
@@ -164,7 +192,10 @@ void bottomtrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
     {
         long numval=strtol(value,NULL,10);
         set_bottomtrim((int)numval);
-        update_label(e,trimmingchoicebox,3,value);
+        char *tempo;
+        asprintf(&tempo,"%spx",value);
+        update_label(e,trimmingchoicebox,3,tempo);
+        free(tempo);
         free(value);
         render_cur_page();
         prerender_next_page();
@@ -227,10 +258,10 @@ void TrimmingDialog(Evas *e, Evas_Object *obj)
 	};
 
     char *lefttrim,*righttrim,*toptrim,*bottomtrim;
-    asprintf(&lefttrim,"%d",get_lefttrim());
-    asprintf(&righttrim,"%d",get_righttrim());
-    asprintf(&toptrim,"%d",get_toptrim());
-    asprintf(&bottomtrim,"%d",get_bottomtrim());
+    asprintf(&lefttrim,"%dpx",get_lefttrim());
+    asprintf(&righttrim,"%dpx",get_righttrim());
+    asprintf(&toptrim,"%dpx",get_toptrim());
+    asprintf(&bottomtrim,"%dpx",get_bottomtrim());
 	const char *values[] = {
 		lefttrim,	
 		righttrim,
@@ -291,11 +322,11 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
 	};
 
     char *zoom;
-    asprintf(&zoom,"%d",(int)(get_zoom_inc()*100));
+    asprintf(&zoom,"%d%%",(int)(get_zoom_inc()*100));
     char *hpan;
-    asprintf(&hpan,"%d",(int)(get_hpan_inc()*100));
+    asprintf(&hpan,"%d%%",(int)(get_hpan_inc()*100));
     char *vpan;
-    asprintf(&vpan,"%d",(int)(get_vpan_inc()*100));
+    asprintf(&vpan,"%d%%",(int)(get_vpan_inc()*100));
 	const char *values[] = {
 		hpan,	
 		vpan,
