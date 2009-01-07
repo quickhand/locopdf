@@ -34,7 +34,7 @@ const char *FIT_STRINGS[] = {
 		"Stretch Fit",
         "No Fit",
 	};
-const char *READER_MODE_STRINGS[] = {
+const char *OFF_ON_STRINGS[] = {
         "Off",
         "On",
     };
@@ -371,8 +371,15 @@ void preferences_choicehandler(Evas *e, Evas_Object *parent,int choice, bool lp)
     }
     else if(choice==5)
     {
+        set_antialias_mode(!get_antialias_mode());
+        update_label(e,preferenceschoicebox,5,OFF_ON_STRINGS[get_antialias_mode()]);
+        render_cur_page();
+        prerender_next_page();
+    }
+    else if(choice==6)
+    {
         set_reader_mode(!get_reader_mode());
-        update_label(e,preferenceschoicebox,5,READER_MODE_STRINGS[get_reader_mode()]);
+        update_label(e,preferenceschoicebox,6,OFF_ON_STRINGS[get_reader_mode()]);
     }
 }
 
@@ -384,7 +391,8 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
 		"3. Trimming",
 		"4. Zoom Increment",
         "5. Fit Mode",
-        "6. Reader Mode",
+        "6. Antialias",
+        "7. Reader Mode",
 	};
     
     
@@ -403,10 +411,11 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
 		"",
 		zoom,
         FIT_STRINGS[get_fit_mode()],
-        READER_MODE_STRINGS[get_reader_mode()],
+        OFF_ON_STRINGS[get_antialias_mode()],
+        OFF_ON_STRINGS[get_reader_mode()],
 	};
     
-	preferenceschoicebox=init_choicebox(e,initchoices, values, 6, preferences_choicehandler, "Settings",obj, true);
+	preferenceschoicebox=init_choicebox(e,initchoices, values, 7, preferences_choicehandler, "Settings",obj, true);
     int x,y,w,h;
     evas_object_geometry_get(preferenceschoicebox,&x,&y,&w,&h);
     evas_object_move(preferenceschoicebox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));

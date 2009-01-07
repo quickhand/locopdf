@@ -33,6 +33,7 @@
 #include <Ecore_Evas.h>
 #include <Edje.h>
 #include <epdf/Epdf.h>
+#include <GlobalParams.h>
 #include "keyhandler.h"
 #include "dialogs.h"
 #include "locopdf.h"
@@ -165,7 +166,26 @@ void set_reader_mode(int newreadermode)
     readermode=(newreadermode!=0);    
     
 }
-
+int get_antialias_mode()
+{
+    return (globalParams->getAntialias() && globalParams->getVectorAntialias());
+    
+}
+void set_antialias_mode(int newantialiasmode)
+{
+    if(newantialiasmode)
+    {
+        globalParams->setAntialias("yes");
+        globalParams->setVectorAntialias("yes");
+    }
+    else
+    {
+        globalParams->setAntialias("no");
+        globalParams->setVectorAntialias("no");
+        
+    }
+    
+}
 void render_cur_page()
 {
     char pdfobjstr[20];
@@ -627,6 +647,10 @@ int main(int argc, char *argv[])
     ecore_evas_init();
     edje_init();
     
+    if (!globalParams)
+        globalParams = new GlobalParams();
+    globalParams->setAntialias("yes");
+    globalParams->setVectorAntialias("yes");
     /* setup database */
     
     const char *homedir=getenv("HOME");
@@ -707,7 +731,13 @@ int main(int argc, char *argv[])
         free(temp12);
     evas_object_name_set(o1, "pdfobj1");
     evas_object_show (o1);
-
+    if(dbres!=(-1))
+    {
+        int am=get_setting_INT(argv[1],"antialias");
+        if(am>=0)
+            set_antialias_mode(am);
+    }
+    
     render_cur_page();
     prerender_next_page();
     
@@ -728,6 +758,7 @@ int main(int argc, char *argv[])
         evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
         set_setting_INT(argv[1],"current_x",x);
         set_setting_INT(argv[1],"current_y",y);
+        set_setting_INT(argv[1],"antialias",get_antialias_mode());
         fini_database();
     }
     evas_object_del (o1);

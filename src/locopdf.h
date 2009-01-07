@@ -28,6 +28,8 @@ void set_bottomtrim(int newbottomtrim);
 int get_fit_mode();
 void set_fit_mode(int newfitmode);
 int get_reader_mode();
+int get_antialias_mode();
+void set_antialias_mode(int newantialiasmode);
 void set_reader_mode(int newreadermode);
 void render_cur_page();
 void prerender_next_page();
