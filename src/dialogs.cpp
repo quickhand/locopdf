@@ -40,7 +40,32 @@ const char *OFF_ON_STRINGS[] = {
     };
         
     
-Evas_Object *preferenceschoicebox,*zoomentrybox,*hpanentrybox,*vpanentrybox,*trimmingchoicebox,*lefttrimentrybox,*righttrimentrybox,*toptrimentrybox,*bottomtrimentrybox,*fitmodechoicebox;
+Evas_Object *preferenceschoicebox,*zoomentrybox,*hpanentrybox,*vpanentrybox,*trimmingchoicebox,*lefttrimentrybox,*righttrimentrybox,*toptrimentrybox,*bottomtrimentrybox,*fitmodechoicebox,*gotopageentrybox;
+//hpan entrybox
+void goto_page_entryhandler(Evas *e, Evas_Object *obj,char *value)
+{
+    if(value)
+    {
+        int numval=(int)strtol(value,NULL,10);
+        if(numval>0 && numval<=get_num_pages())
+        {
+            goto_page(numval-1);
+        }
+        free(value);
+    }
+}
+
+void GotoPageEntry(Evas *e, Evas_Object *obj)
+{
+    char *tempstr;
+    asprintf(&tempstr,"Page? (%d/%d)",get_cur_page()+1,get_num_pages());
+    gotopageentrybox=init_entrybox(e,tempstr,"",4,goto_page_entryhandler,obj);
+    free(tempstr);
+    int x,y,w,h;
+    evas_object_geometry_get(gotopageentrybox,&x,&y,&w,&h);
+    evas_object_move(gotopageentrybox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
+    
+}
 //hpan entrybox
 void hpan_entryhandler(Evas *e, Evas_Object *obj,char *value)
 {

@@ -186,6 +186,21 @@ void set_antialias_mode(int newantialiasmode)
     }
     
 }
+int get_num_pages()
+{
+    return numpages;
+}
+void goto_page(int newpage)
+{
+    curpage=newpage;
+    reset_cur_panning();
+    render_cur_page();
+    prerender_next_page();
+}
+int get_cur_page()
+{
+    return curpage;    
+}
 void render_cur_page()
 {
     char pdfobjstr[20];
@@ -486,6 +501,12 @@ void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
     else if(index==5)
     {
         reset_cur_panning();
+        
+    }
+    else if(index==6)
+    {
+        Evas_Object *bgobj=evas_object_name_find(evas,"background");
+        GotoPageEntry(evas,bgobj);    
         
     }
     else if(index==7)
