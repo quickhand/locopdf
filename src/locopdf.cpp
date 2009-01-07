@@ -207,6 +207,19 @@ void *thread_func(void *vptr_args)
     return NULL;
 
 }
+int are_legal_coords(int x1,int y1,int x2,int y2)
+{
+    
+    int xs_in_range=((x1>0&&x1<get_win_width())||(x2>0&&x2<get_win_width()));
+    int ys_in_range=((y1>0&&y1<get_win_height())||(y2>0&&y2<get_win_height()));
+    int xs_opposite=(x1<=0&&x2>=get_win_width());
+    int ys_opposite=(y1<=0&&y2>=get_win_height());
+    if((ys_in_range && xs_in_range) || (ys_in_range&& xs_opposite) || (xs_in_range && ys_opposite) || (xs_opposite && ys_opposite))
+        return 1;
+    return 0;
+    
+    
+}
 void pan_cur_page(int panx,int pany)
 {
     Evas_Object *pdfobj;
@@ -217,23 +230,8 @@ void pan_cur_page(int panx,int pany)
     int x,y,w,h;
     evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
     
-    //check range
-
-    int accept=0;    
     
-    int x1=x+panx;
-    int x2=x+w+panx;
-    int y1=y+pany;
-    int y2=y+h+pany;
-    
-    int xs_in_range=((x1>0&&x1<get_win_width())||(x2>0&&x2<get_win_width()));
-    int ys_in_range=((y1>0&&y1<get_win_height())||(y2>0&&y2<get_win_height()));
-    int xs_opposite=(x1<=0&&x2>=get_win_width());
-    int ys_opposite=(y1<=0&&y2>=get_win_height());
-    if((ys_in_range && xs_in_range) || (ys_in_range&& xs_opposite) || (xs_in_range && ys_opposite) || (xs_opposite && ys_opposite))
-        accept=1;
-    
-    if(accept)
+    if(are_legal_coords(x+panx,y+pany,x+w+panx,y+h+pany))
         evas_object_move (pdfobj,x+panx,y+pany);
 }
 
@@ -397,19 +395,41 @@ void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
     {
         if((zoom-zoominc)>0)
         {
-            zoom-=zoominc;
-            render_cur_page();
-            prerender_next_page();
-
+            Evas_Object *pdfobj;
+            if(curpdfobj==1)
+                pdfobj=evas_object_name_find(evas,"pdfobj1");
+            else
+                pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+            int x,y,w,h;
+            evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+            int new_w=ROUND(((double)w)*(zoom-zoominc)/zoom);
+            int new_h=ROUND(((double)h)*(zoom-zoominc)/zoom);
+            if(are_legal_coords(x,y,x+new_w,y+new_h))
+            {
+                zoom-=zoominc;
+                render_cur_page();
+                prerender_next_page();
+            }
         }
         
     }
     else if(index==8)
     {
-        zoom+=zoominc;
-        render_cur_page();
-        prerender_next_page();
-
+        Evas_Object *pdfobj;
+        if(curpdfobj==1)
+            pdfobj=evas_object_name_find(evas,"pdfobj1");
+        else
+            pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+        int x,y,w,h;
+        evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+        int new_w=ROUND(((double)w)*(zoom+zoominc)/zoom);
+        int new_h=ROUND(((double)h)*(zoom+zoominc)/zoom);
+        if(are_legal_coords(x,y,x+new_w,y+new_h))
+        {
+            zoom+=zoominc;
+            render_cur_page();
+            prerender_next_page();
+        }
         
     }
     else if(index==9)
