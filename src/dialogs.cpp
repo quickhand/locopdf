@@ -27,7 +27,20 @@
 #include <cstdlib>
 #include <cstring>
 
-Evas_Object *preferenceschoicebox,*zoomentrybox,*hpanentrybox,*vpanentrybox,*trimmingchoicebox,*lefttrimentrybox,*righttrimentrybox,*toptrimentrybox,*bottomtrimentrybox;
+const char *FIT_STRINGS[] = { 		
+		"Fit Width",
+		"Fit Height",
+		"Best Fit",
+		"Stretch Fit",
+        "No Fit",
+	};
+const char *READER_MODE_STRINGS[] = {
+        "Off",
+        "On",
+    };
+        
+    
+Evas_Object *preferenceschoicebox,*zoomentrybox,*hpanentrybox,*vpanentrybox,*trimmingchoicebox,*lefttrimentrybox,*righttrimentrybox,*toptrimentrybox,*bottomtrimentrybox,*fitmodechoicebox;
 //hpan entrybox
 void hpan_entryhandler(Evas *e, Evas_Object *obj,char *value)
 {
@@ -210,6 +223,47 @@ void BottomTrimEntry(Evas *e, Evas_Object *obj,const char *startval)
     evas_object_move(bottomtrimentrybox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
     
 }
+// fitmode choicebox
+
+void fitmode_choicehandler(Evas *e, Evas_Object *parent,int choice, bool lp)
+{
+    if(get_fit_mode()!=choice)
+    {
+        set_fit_mode(choice);
+        update_label(e,preferenceschoicebox,4,FIT_STRINGS[choice]);
+        fini_choicebox(e,parent,false);
+        evas_object_focus_set(choicebox_get_parent(e,parent),1);
+        render_cur_page();
+        prerender_next_page();
+    }
+}
+
+void FitModeDialog(Evas *e, Evas_Object *obj)
+{
+	const char *initchoices[] = { 		
+		"1. Fit Width",
+		"2. Fit Height",
+		"3. Best Fit",
+		"4. Stretch Fit",
+        "5. No Fit",
+	};
+
+    
+	const char *values[] = {
+		"",	
+		"",
+		"",
+		"",
+        "",
+	};
+    
+	fitmodechoicebox=init_choicebox(e,initchoices, values, 5, fitmode_choicehandler, "Settings",obj, true);
+    
+    int x,y,w,h;
+    evas_object_geometry_get(fitmodechoicebox,&x,&y,&w,&h);
+    evas_object_move(fitmodechoicebox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
+    
+}
 // trimming choicebox
 
 void trimming_choicehandler(Evas *e, Evas_Object *parent,int choice, bool lp)
@@ -310,6 +364,16 @@ void preferences_choicehandler(Evas *e, Evas_Object *parent,int choice, bool lp)
         ZoomEntry(e,parent,startval);    
         free(startval);
     }
+    else if(choice==4)
+    {
+        FitModeDialog(e,parent);    
+        
+    }
+    else if(choice==5)
+    {
+        set_reader_mode(!get_reader_mode());
+        update_label(e,preferenceschoicebox,5,READER_MODE_STRINGS[get_reader_mode()]);
+    }
 }
 
 void PreferencesDialog(Evas *e, Evas_Object *obj)
@@ -319,7 +383,12 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
 		"2. Ver. Panning",
 		"3. Trimming",
 		"4. Zoom Increment",
+        "5. Fit Mode",
+        "6. Reader Mode",
 	};
+    
+    
+    
 
     char *zoom;
     asprintf(&zoom,"%d%%",(int)(get_zoom_inc()*100));
@@ -327,14 +396,17 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
     asprintf(&hpan,"%d%%",(int)(get_hpan_inc()*100));
     char *vpan;
     asprintf(&vpan,"%d%%",(int)(get_vpan_inc()*100));
+    
 	const char *values[] = {
 		hpan,	
 		vpan,
 		"",
 		zoom,
+        FIT_STRINGS[get_fit_mode()],
+        READER_MODE_STRINGS[get_reader_mode()],
 	};
     
-	preferenceschoicebox=init_choicebox(e,initchoices, values, 4, preferences_choicehandler, "Settings",obj, true);
+	preferenceschoicebox=init_choicebox(e,initchoices, values, 6, preferences_choicehandler, "Settings",obj, true);
     int x,y,w,h;
     evas_object_geometry_get(preferenceschoicebox,&x,&y,&w,&h);
     evas_object_move(preferenceschoicebox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));

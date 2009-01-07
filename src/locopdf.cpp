@@ -55,7 +55,8 @@ int numpages;
 int curpage=0;
 int curpdfobj=1;
 int prerendering=0;
-int fitmode=0;  //0=none; 1=fit width; 2=fit height
+int fitmode=FIT_WIDTH;
+int readermode=0;
 double zoom=1.0;
 double zoominc=0.1;
 double hpaninc=0.5;
@@ -65,7 +66,6 @@ int lefttrim=0;
 int righttrim=0;
 int toptrim=0;
 int bottomtrim=0;
-
 
 
 int winwidth=600;
@@ -148,6 +148,24 @@ void set_bottomtrim(int newbottomtrim)
 {
     bottomtrim=newbottomtrim;    
 }
+int get_fit_mode()
+{
+    return fitmode;    
+}
+void set_fit_mode(int newfitmode)
+{
+    fitmode=newfitmode;
+}
+int get_reader_mode()
+{
+    return readermode;    
+}
+void set_reader_mode(int newreadermode)
+{
+    readermode=(newreadermode!=0);    
+    
+}
+
 void render_cur_page()
 {
     char pdfobjstr[20];
@@ -159,7 +177,48 @@ void render_cur_page()
     double fitwidthzoom=((double)get_win_width())/((double)(width-lefttrim-righttrim))*zoom;
     double fitheightzoom=((double)get_win_height())/((double)(height-toptrim-bottomtrim))*zoom;
     
-    epdf_page_scale_set (page,fitwidthzoom,fitwidthzoom);
+    
+    double scalex;
+    double scaley;
+    
+    if(fitmode==FIT_WIDTH)
+    {
+        scalex=fitwidthzoom;    
+        scaley=fitwidthzoom;
+    }
+    else if(fitmode==FIT_HEIGHT)
+    {
+        scalex=fitheightzoom;
+        scaley=fitheightzoom;
+    }
+    else if(fitmode==FIT_BEST)
+    {
+        if(fitwidthzoom<=fitheightzoom)
+        {
+            scalex=fitwidthzoom;
+            scaley=fitwidthzoom;
+        }
+        else
+        {
+            scalex=fitheightzoom;
+            scaley=fitheightzoom;
+        }
+        
+    }
+    else if(fitmode==FIT_STRETCH)
+    {
+        scalex=fitwidthzoom;
+        scaley=fitheightzoom;
+    
+    }
+    else if(fitmode==FIT_NO)
+    {
+        scalex=1.0;
+        scaley=1.0;
+        
+    }
+    
+    epdf_page_scale_set (page,scalex,scaley);
     //epdf_page_scale_set (page,1.0,1.0);
     //epdf_page_scale_set(page,zoom,zoom);
     if(!lefttrim && !righttrim && !toptrim && !bottomtrim)
@@ -168,7 +227,7 @@ void render_cur_page()
     }
     else
     {
-        epdf_page_render_slice (page,pdfobj,(int)(((double)lefttrim)*fitwidthzoom),(int)(((double)toptrim)*fitwidthzoom),(int)(((double)(width-lefttrim-righttrim))*fitwidthzoom),(int)(((double)(height-toptrim-bottomtrim))*fitwidthzoom));
+        epdf_page_render_slice (page,pdfobj,(int)(((double)lefttrim)*scalex),(int)(((double)toptrim)*scaley),(int)(((double)(width-lefttrim-righttrim))*scalex),(int)(((double)(height-toptrim-bottomtrim))*scaley));
                              
         
     }
@@ -350,7 +409,25 @@ void main_nav_left(Evas *e, Evas_Object *obj)
 
 void main_nav_right(Evas *e, Evas_Object *obj)
 {
-    next_page();
+    if(readermode)
+    {
+        Evas_Object *pdfobj;
+        int pan_amt=(-1)*ROUND(((double)get_win_height())*vpaninc);
+        if(curpdfobj==1)
+            pdfobj=evas_object_name_find(evas,"pdfobj1");
+        else
+            pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+        int x,y,w,h;
+        evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+    
+    
+        if(are_legal_coords(x,y+pan_amt,x+w,y+h+pan_amt))
+            pan_cur_page(0,pan_amt);
+        else
+            next_page();
+    }
+    else
+        next_page();
 }
 
 void main_nav_sel(Evas *e, Evas_Object *obj)
@@ -439,7 +516,25 @@ void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
     }
     else if(index==0)
     {
-        next_page();    
+        if(readermode)
+        {
+            Evas_Object *pdfobj;
+            int pan_amt=(-1)*ROUND(((double)get_win_height())*vpaninc);
+            if(curpdfobj==1)
+                pdfobj=evas_object_name_find(evas,"pdfobj1");
+            else
+                pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+            int x,y,w,h;
+            evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+    
+    
+            if(are_legal_coords(x,y+pan_amt,x+w,y+h+pan_amt))
+                pan_cur_page(0,pan_amt);
+            else
+                next_page();
+        }
+        else
+            next_page();
     }
 }
 
@@ -468,14 +563,18 @@ void save_global_settings(char *filename)
     set_setting_INT(filename,"right_trim",righttrim);
     set_setting_INT(filename,"top_trim",toptrim);
     set_setting_INT(filename,"bottom_trim",bottomtrim);
+    set_setting_INT(filename,"fit_mode",fitmode);
+    set_setting_INT(filename,"reader_mode",readermode);
 }
 void restore_global_settings(char *filename)
 {
     int temp11,temp12,temp13,temp14;
-    double temp21,temp22;
+    double temp21,temp22,temp23,temp24;
     temp11=get_setting_INT(filename,"current_page");
     if(temp11>=0)
         curpage=temp11;
+    
+    
     temp21=get_setting_DOUBLE(filename,"zoom_increment");
     temp22=get_setting_DOUBLE(filename,"current_zoom");
     if(temp21>0 && temp22>0)
@@ -502,6 +601,17 @@ void restore_global_settings(char *filename)
         toptrim=temp13;
         bottomtrim=temp14;
         
+    }
+    temp11=get_setting_INT(filename,"reader_mode");
+    if(temp11==0 || temp11==1)
+    {
+        readermode=temp11;    
+        
+    }
+    temp11=get_setting_INT(filename,"fit_mode");
+    if(temp11>=0)
+    {
+        fitmode=temp11;    
     }
 }
 
