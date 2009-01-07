@@ -29,12 +29,14 @@
 #include <cmath>
 #include <Evas.h>
 #include <Ecore.h>
+#include <Ecore_File.h>
 #include <Ecore_Evas.h>
 #include <Edje.h>
 #include <epdf/Epdf.h>
 #include "keyhandler.h"
 #include "dialogs.h"
 #include "locopdf.h"
+#include "database.h"
 #define REL_THEME "themes/themes_oitheme.edj"
 
 #define ROUND(f) (int)floor(f + 0.5)
@@ -431,8 +433,53 @@ static key_handler_info_t main_info =
     main_item
 };
 
-
-
+void save_global_settings(char *filename)
+{
+    set_setting_INT(filename,"current_page",curpage);
+    set_setting_DOUBLE(filename,"zoom_increment",zoominc);
+    set_setting_DOUBLE(filename,"current_zoom",zoom);
+    set_setting_DOUBLE(filename,"h_pan_increment",hpaninc);
+    set_setting_DOUBLE(filename,"v_pan_increment",vpaninc);
+    set_setting_INT(filename,"left_trim",lefttrim);
+    set_setting_INT(filename,"right_trim",righttrim);
+    set_setting_INT(filename,"top_trim",toptrim);
+    set_setting_INT(filename,"bottom_trim",bottomtrim);
+}
+void restore_global_settings(char *filename)
+{
+    int temp11,temp12,temp13,temp14;
+    double temp21,temp22;
+    temp11=get_setting_INT(filename,"current_page");
+    if(temp11>0)
+        curpage=temp11;
+    temp21=get_setting_DOUBLE(filename,"zoom_increment");
+    temp22=get_setting_DOUBLE(filename,"current_zoom");
+    if(temp21>0 && temp22>0)
+    {
+        zoominc=temp21;
+        zoom=temp22;
+    }
+    temp21=get_setting_DOUBLE(filename,"h_pan_increment");
+    temp22=get_setting_DOUBLE(filename,"v_pan_increment");
+    if(temp21>0 && temp22>0)
+    {
+        hpaninc=temp21;
+        vpaninc=temp22;
+        
+    }
+    temp11=get_setting_INT(filename,"left_trim");
+    temp12=get_setting_INT(filename,"right_trim");
+    temp13=get_setting_INT(filename,"top_trim");
+    temp14=get_setting_INT(filename,"bottom_trim");
+    if(temp11>0 && temp12>0 && temp13>0 && temp14>0)
+    {
+        temp11=lefttrim;
+        temp12=righttrim;
+        temp13=toptrim;
+        temp14=bottomtrim;
+        
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -445,6 +492,23 @@ int main(int argc, char *argv[])
     ecore_init();
     ecore_evas_init();
     edje_init();
+    
+    /* setup database */
+    
+    const char *homedir=getenv("HOME");
+    char *settingsdir;
+    asprintf(&settingsdir,"%s/%s",homedir,".locopdf/");
+    if(!ecore_file_path_dir_exists(settingsdir))
+    {
+        ecore_file_mkpath(settingsdir);
+    }
+    free(settingsdir);
+    char *dbfile;
+    asprintf(&dbfile,"%s/%s",homedir,".locopdf/files.db");
+    int dbres=init_database(dbfile);
+    free(dbfile);
+    if(dbres!=(-1))
+        restore_global_settings(argv[1]);
     /* create our Ecore_Evas and show it */
     ee = ecore_evas_software_x11_new(0, 0, 0, 0, 600, 800);
     
@@ -483,7 +547,6 @@ int main(int argc, char *argv[])
     // manage error here
         fprintf(stderr,"Error Processing Document");
     }
-    curpage=0;
     curpdfobj=1;
 
     o2 = evas_object_image_add (evas);
@@ -492,7 +555,22 @@ int main(int argc, char *argv[])
     //evas_object_show (o2);
 
     o1 = evas_object_image_add (evas);
-    evas_object_move (o1, 0, 0);
+    
+    
+    char *temp11,*temp12;
+    if(dbres!=(-1))
+    {
+        temp11=get_setting(argv[1],"current_x");
+        temp12=get_setting(argv[1],"current_y");
+    }
+    if(temp11 && temp12 && dbres!=(-1))
+        evas_object_move (o1,(int)strtol(temp11,NULL,10),(int)strtol(temp12,NULL,10));
+    else
+        evas_object_move(o1,0,0);
+    if(temp11)
+        free(temp11);
+    if(temp12)
+        free(temp12);
     evas_object_name_set(o1, "pdfobj1");
     evas_object_show (o1);
 
@@ -502,14 +580,29 @@ int main(int argc, char *argv[])
 
     /* start the main event loop */
     ecore_main_loop_begin();
-
+    
     /* when the main event loop exits, shutdown our libraries */
+    if(dbres!=(-1))
+    {
+        save_global_settings(argv[1]);
+        Evas_Object *pdfobj;
+        if(curpdfobj==1)
+            pdfobj=evas_object_name_find(evas,"pdfobj1");
+        else
+            pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+        int x,y,w,h;
+        evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+        set_setting_INT(argv[1],"current_x",x);
+        set_setting_INT(argv[1],"current_y",y);
+        fini_database();
+    }
     evas_object_del (o1);
     evas_object_del (o2);
     evas_object_del (bg);
     epdf_page_delete (page);
     epdf_document_delete (document);
-
+    
+    
     edje_shutdown();
     ecore_evas_shutdown();
     ecore_shutdown();
