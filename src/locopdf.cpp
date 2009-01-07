@@ -473,10 +473,10 @@ void restore_global_settings(char *filename)
     temp14=get_setting_INT(filename,"bottom_trim");
     if(temp11>=0 && temp12>=0 && temp13>=0 && temp14>=0)
     {
-        temp11=lefttrim;
-        temp12=righttrim;
-        temp13=toptrim;
-        temp14=bottomtrim;
+        lefttrim=temp11;
+        righttrim=temp12;
+        toptrim=temp13;
+        bottomtrim=temp14;
         
     }
 }
