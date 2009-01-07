@@ -450,7 +450,7 @@ void restore_global_settings(char *filename)
     int temp11,temp12,temp13,temp14;
     double temp21,temp22;
     temp11=get_setting_INT(filename,"current_page");
-    if(temp11>0)
+    if(temp11>=0)
         curpage=temp11;
     temp21=get_setting_DOUBLE(filename,"zoom_increment");
     temp22=get_setting_DOUBLE(filename,"current_zoom");
@@ -471,7 +471,7 @@ void restore_global_settings(char *filename)
     temp12=get_setting_INT(filename,"right_trim");
     temp13=get_setting_INT(filename,"top_trim");
     temp14=get_setting_INT(filename,"bottom_trim");
-    if(temp11>0 && temp12>0 && temp13>0 && temp14>0)
+    if(temp11>=0 && temp12>=0 && temp13>=0 && temp14>=0)
     {
         temp11=lefttrim;
         temp12=righttrim;
