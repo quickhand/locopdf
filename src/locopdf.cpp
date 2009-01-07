@@ -216,20 +216,24 @@ void pan_cur_page(int panx,int pany)
         pdfobj=evas_object_name_find(evas,"pdfobj2"); 
     int x,y,w,h;
     evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
-    //check range
-    int inrange=0;
-    if((x+panx)>=0 && (x+panx)<get_win_width() && (y+pany)>=0 && (y+pany)<get_win_height())
-        inrange=1;
-    else if((x+w+panx)>=0 && (x+w+panx)<get_win_width() && (y+pany)>=0 && (y+pany)<get_win_height())
-        inrange=1;
-    else if((x+panx)>=0 && (x+panx)<get_win_width() && (y+h+pany)>=0 && (y+h+pany)<get_win_height())
-        inrange=1;
-    else if((x+w+panx)>=0 && (x+w+panx)<get_win_width() && (y+h+pany)>=0 && (y+h+pany)<get_win_height())
-        inrange=1;
     
-    if(((x+panx)<=0 && (x+w+panx)<=0) || ((y+pany)<=0&& (y+h+pany)<=0) || ((x+panx)>=get_win_width() && (x+w+panx)>=get_win_width()) || ((y+pany)>=get_win_height()&& (y+h+pany)>=get_win_height())) 
-        inrange=0;
-    if(inrange)
+    //check range
+
+    int accept=0;    
+    
+    int x1=x+panx;
+    int x2=x+w+panx;
+    int y1=y+pany;
+    int y2=y+h+pany;
+    
+    int xs_in_range=((x1>0&&x1<get_win_width())||(x2>0&&x2<get_win_width()));
+    int ys_in_range=((y1>0&&y1<get_win_height())||(y2>0&&y2<get_win_height()));
+    int xs_opposite=(x1<=0&&x2>=get_win_width());
+    int ys_opposite=(y1<=0&&y2>=get_win_height());
+    if((ys_in_range && xs_in_range) || (ys_in_range&& xs_opposite) || (xs_in_range && ys_opposite) || (xs_opposite && ys_opposite))
+        accept=1;
+    
+    if(accept)
         evas_object_move (pdfobj,x+panx,y+pany);
 }
 
