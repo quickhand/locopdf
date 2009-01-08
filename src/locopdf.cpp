@@ -285,7 +285,48 @@ void *thread_func(void *vptr_args)
     double fitwidthzoom=((double)get_win_width())/((double)(width-lefttrim-righttrim))*zoom;
     double fitheightzoom=((double)get_win_height())/((double)(height-toptrim-bottomtrim))*zoom;
     
-    epdf_page_scale_set (page,fitwidthzoom,fitwidthzoom);
+    double scalex;
+    double scaley;
+    
+    if(fitmode==FIT_WIDTH)
+    {
+        scalex=fitwidthzoom;    
+        scaley=fitwidthzoom;
+    }
+    else if(fitmode==FIT_HEIGHT)
+    {
+        scalex=fitheightzoom;
+        scaley=fitheightzoom;
+    }
+    else if(fitmode==FIT_BEST)
+    {
+        if(fitwidthzoom<=fitheightzoom)
+        {
+            scalex=fitwidthzoom;
+            scaley=fitwidthzoom;
+        }
+        else
+        {
+            scalex=fitheightzoom;
+            scaley=fitheightzoom;
+        }
+        
+    }
+    else if(fitmode==FIT_STRETCH)
+    {
+        scalex=fitwidthzoom;
+        scaley=fitheightzoom;
+    
+    }
+    else if(fitmode==FIT_NO)
+    {
+        scalex=1.0;
+        scaley=1.0;
+        
+    }
+    
+    epdf_page_scale_set (page,scalex,scaley);
+    //epdf_page_scale_set (page,1.0,1.0);
     //epdf_page_scale_set(page,zoom,zoom);
     if(!lefttrim && !righttrim && !toptrim && !bottomtrim)
     {
@@ -293,7 +334,7 @@ void *thread_func(void *vptr_args)
     }
     else
     {
-        epdf_page_render_slice (page,pdfobj,(int)(((double)lefttrim)*fitwidthzoom),(int)(((double)toptrim)*fitwidthzoom),(int)(((double)(width-lefttrim-righttrim))*fitwidthzoom),(int)(((double)(height-toptrim-bottomtrim))*fitwidthzoom));
+        epdf_page_render_slice (page,pdfobj,(int)(((double)lefttrim)*scalex),(int)(((double)toptrim)*scaley),(int)(((double)(width-lefttrim-righttrim))*scalex),(int)(((double)(height-toptrim-bottomtrim))*scaley));
                              
         
     }
