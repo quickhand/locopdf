@@ -81,8 +81,7 @@ void choicebox_change_selection(Evas *e, Evas_Object *obj, int new_navsel)
         edje_object_signal_emit(newselected_choice,"select","EVAS");
     }
     
-
-	infostruct->navsel = new_navsel;
+    infostruct->navsel = new_navsel;
 }
 
 void choicebox_next_page(Evas *e, Evas_Object *obj)
@@ -126,8 +125,13 @@ void choicebox_next_page(Evas *e, Evas_Object *obj)
         
     }
     
-
-
+    if(infostruct->numchoices>noptions)
+    {
+        char *p;
+        asprintf(&p, "Page %d of %d", 1 + infostruct->curindex / 8, (7 + infostruct->numchoices) / 8);
+        edje_object_part_text_set(obj,"dlg_choicebox/footertext",p);
+        free(p);
+    }
 	choicebox_change_selection(e,obj, 0);
 
 }
@@ -167,7 +171,13 @@ void choicebox_previous_page(Evas *e, Evas_Object *obj)
         
         
     }
-    
+    if(infostruct->numchoices>noptions)
+    {
+        char *p;
+        asprintf(&p, "Page %d of %d", 1 + infostruct->curindex / 8, (7 + infostruct->numchoices) / 8);
+        edje_object_part_text_set(obj,"dlg_choicebox/footertext",p);
+        free(p);
+    }
 
 	choicebox_change_selection(e,obj, 0);
 }
@@ -288,6 +298,8 @@ Evas_Object *init_choicebox(Evas *evas,const char *choicelist[], const char *val
     evas_object_resize(win,edje_w,edje_h);
 
     evas_object_move (win,0,0);
+    if(header)
+        edje_object_part_text_set(win,"dlg_choicebox/titletext",header);
     evas_object_show(win);
     evas_object_focus_set(win,1);
     
@@ -337,6 +349,16 @@ Evas_Object *init_choicebox(Evas *evas,const char *choicelist[], const char *val
             edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
         
         evas_object_show(valuelabel);
+    }
+    
+    if(numchoices>noptions)
+    {
+     
+        char *p;
+        asprintf(&p,"Page 1 of %d",(7 + numchoices) / 8);
+        edje_object_part_text_set(win,"dlg_choicebox/footertext",p);
+        free(p);
+        
     }
     
     free(themefile);
