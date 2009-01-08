@@ -256,8 +256,9 @@ void fitmode_choicehandler(Evas *e, Evas_Object *parent,int choice, bool lp)
     {
         set_fit_mode(choice);
         update_label(e,preferenceschoicebox,4,FIT_STRINGS[choice]);
-        fini_choicebox(e,parent,false);
+        
         evas_object_focus_set(choicebox_get_parent(e,parent),1);
+        fini_choicebox(e,parent,false);
         render_cur_page();
         prerender_next_page();
     }
