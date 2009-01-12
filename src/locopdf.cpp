@@ -587,8 +587,8 @@ void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
     else if(index==3)
     {
         
-        
-        TOCDialog(e,obj,pdf_index);
+        if(pdf_index)
+            TOCDialog(e,obj,pdf_index);
     }
     else if(index==4)
     {
