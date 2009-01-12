@@ -21,8 +21,10 @@
 #define DIALOGS_H_
 
 #include <Evas.h>
-
+#include <Ecore.h>
+#include <Ecore_Data.h>
 void PreferencesDialog(Evas *e, Evas_Object *obj);
 void ZoomEntry(Evas *e, Evas_Object *obj);
 void GotoPageEntry(Evas *e, Evas_Object *obj);
+void TOCDialog(Evas *e, Evas_Object *obj,Ecore_List *list);
 #endif

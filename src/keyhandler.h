@@ -13,7 +13,8 @@ typedef struct {
     key_handler_t nav_right_handler;
     key_handler_t nav_sel_handler;
     key_handler_t nav_menubtn_handler;
-    key_handler_t shift_handler;
+    key_handler_t plus_handler;
+    key_handler_t minus_handler;
     item_handler_t item_handler;
 } key_handler_info_t;
 

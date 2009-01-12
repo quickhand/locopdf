@@ -1,6 +1,7 @@
 #ifndef LOCOPDF_H_
 #define LOCOPDF_H_
 
+#include <Epdf.h>
 #define FIT_WIDTH 0
 #define FIT_HEIGHT 1
 #define FIT_BEST 2
@@ -34,7 +35,7 @@ void set_reader_mode(int newreadermode);
 int get_num_pages();
 void goto_page(int newpage);
 int get_cur_page();
-
+Epdf_Document *get_document();
 
 void render_cur_page();
 void prerender_next_page();

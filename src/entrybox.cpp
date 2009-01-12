@@ -103,6 +103,7 @@ static key_handler_info_t entrybox_handlers = {
 	NULL,
 	NULL,
 	NULL,
+    NULL,
 	entrybox_item
 };
 

@@ -52,6 +52,7 @@ typedef struct _choice_info_struct {
     Evas_Object **choicelabels;
     Evas_Object **valuelabels;
     Evas_Object *maintable;
+    void *userdata;
 } choice_info_struct;
 
 
@@ -66,19 +67,25 @@ void choicebox_change_selection(Evas *e, Evas_Object *obj, int new_navsel)
         Evas_Object *oldselected_choice=infostruct->choicelabels[infostruct->navsel];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         //asprintf(&tempstr,"valuelabel_%d",infostruct->navsel);
-        Evas_Object *oldselected_value=infostruct->valuelabels[infostruct->navsel];//evas_object_name_find(e,tempstr);
+        Evas_Object *oldselected_value;
+        if(infostruct->values)
+            oldselected_value=infostruct->valuelabels[infostruct->navsel];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         //asprintf(&tempstr,"choicelabel_%d",new_navsel);
         Evas_Object *newselected_choice=infostruct->choicelabels[new_navsel];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         //asprintf(&tempstr,"valuelabel_%d",new_navsel);
-        Evas_Object *newselected_value=infostruct->valuelabels[new_navsel];//evas_object_name_find(e,tempstr);
+        Evas_Object *newselected_value;
+        if(infostruct->values)
+            newselected_value=infostruct->valuelabels[new_navsel];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         
         edje_object_signal_emit(oldselected_choice,"unselect","EVAS");
-        edje_object_signal_emit(oldselected_value,"unselect","EVAS");
+        if(infostruct->values)
+            edje_object_signal_emit(oldselected_value,"unselect","EVAS");
         edje_object_signal_emit(newselected_choice,"select","EVAS");
-        edje_object_signal_emit(newselected_choice,"select","EVAS");
+        if(infostruct->values)
+            edje_object_signal_emit(newselected_value,"select","EVAS");
     }
     
     infostruct->navsel = new_navsel;
@@ -107,17 +114,21 @@ void choicebox_next_page(Evas *e, Evas_Object *obj)
         Evas_Object *choicelabel=infostruct->choicelabels[i];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         //asprintf(&tempstr,"valuelabel_%d",i);
-        Evas_Object *valuelabel=infostruct->valuelabels[i];//evas_object_name_find(e,tempstr);
+        Evas_Object *valuelabel;
+        if(infostruct->values)
+            valuelabel=infostruct->valuelabels[i];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         if(i<shownum)
         {
             edje_object_part_text_set(choicelabel,"dlg_optionlabel/text",infostruct->choices[infostruct->curindex+i]);
-            edje_object_part_text_set(valuelabel,"dlg_valuelabel/text",infostruct->values[infostruct->curindex+i]);
+            if(infostruct->values)
+                edje_object_part_text_set(valuelabel,"dlg_valuelabel/text",infostruct->values[infostruct->curindex+i]);
         }
         else
         {
             edje_object_part_text_set(choicelabel,"dlg_optionlabel/text","");
-            edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
+            if(infostruct->values)
+                edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
             
         }
         
@@ -156,17 +167,21 @@ void choicebox_previous_page(Evas *e, Evas_Object *obj)
         Evas_Object *choicelabel=infostruct->choicelabels[i];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         //asprintf(&tempstr,"valuelabel_%d",i);
-        Evas_Object *valuelabel=infostruct->valuelabels[i];//evas_object_name_find(e,tempstr);
+        Evas_Object *valuelabel;
+        if(infostruct->values)
+            valuelabel=infostruct->valuelabels[i];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         if(i<shownum)
         {
             edje_object_part_text_set(choicelabel,"dlg_optionlabel/text",infostruct->choices[infostruct->curindex+i]);
-            edje_object_part_text_set(valuelabel,"dlg_valuelabel/text",infostruct->values[infostruct->curindex+i]);
+            if(infostruct->values)
+                edje_object_part_text_set(valuelabel,"dlg_valuelabel/text",infostruct->values[infostruct->curindex+i]);
         }
         else
         {
             edje_object_part_text_set(choicelabel,"dlg_optionlabel/text","");
-            edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
+            if(infostruct->values)
+                edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
         }
         
         
@@ -259,11 +274,12 @@ static key_handler_info_t choicebox_handlers = {
 	choicebox_nav_sel,
 	NULL,
 	NULL,
+    NULL,
 	choicebox_item
 };
 
 Evas_Object *init_choicebox(Evas *evas,const char *choicelist[], const char *values[], int numchoices,
-		choice_handler handler, char *header, Evas_Object *parent, bool master)
+		choice_handler handler, char *header, Evas_Object *parent, void *userdata, bool master)
 {
 
 	choice_info_struct *info =
@@ -275,16 +291,21 @@ Evas_Object *init_choicebox(Evas *evas,const char *choicelist[], const char *val
 	info->handler = handler;
 	info->master = master;
 	info->parent = parent;
-
+    info->userdata=userdata;
 	info->choices = (char **) malloc(sizeof(char *) * numchoices);
-	info->values = (char **) malloc(sizeof(char *) * numchoices);
+    if(values)
+        info->values = (char **) malloc(sizeof(char *) * numchoices);
+    else
+        info->values=NULL;
 	for (int i = 0; i < numchoices; i++) {
 		info->choices[i] =
 			(char *) malloc(sizeof(char) * (strlen(choicelist[i]) + 1));
 		asprintf(&(info->choices[i]), "%s", choicelist[i]);
-
-		info->values[i] = (char *)malloc(sizeof(char) * (strlen(values[i]) + 1));
-		asprintf(&(info->values[i]), "%s", values[i]);
+        if(values)
+        {
+            info->values[i] = (char *)malloc(sizeof(char) * (strlen(values[i]) + 1));
+            asprintf(&(info->values[i]), "%s", values[i]);
+        }
 	}
 
     Evas_Object *win=edje_object_add(evas);
@@ -308,12 +329,15 @@ Evas_Object *init_choicebox(Evas *evas,const char *choicelist[], const char *val
     info->maintable=maintable;
     evas_object_table_homogeneous_set(maintable,EVAS_OBJECT_TABLE_HOMOGENEOUS_TABLE);
     edje_object_part_swallow(win,"dlg_choicebox/swallow",maintable);
-    
+
     evas_object_show(maintable);
 	//int shownum = (numchoices <= noptions) ? numchoices : noptions;
     //evas_object_name_set(maintable,"maintable");
     info->choicelabels=(Evas_Object**)malloc(sizeof(Evas_Object*)*noptions);
-    info->valuelabels=(Evas_Object**)malloc(sizeof(Evas_Object*)*noptions);
+    if(values)
+        info->valuelabels=(Evas_Object**)malloc(sizeof(Evas_Object*)*noptions);
+    else
+        info->valuelabels=NULL;
 	int shownum = noptions;
     char *tempstr;
     for(int i=0;i<shownum;i++)
@@ -332,23 +356,27 @@ Evas_Object *init_choicebox(Evas *evas,const char *choicelist[], const char *val
             edje_object_part_text_set(choicelabel,"dlg_optionlabel/text",info->choices[i]);
         else
             edje_object_part_text_set(choicelabel,"dlg_optionlabel/text","");
-        
+
         evas_object_show(choicelabel);
+        if(values)
+        {
+            Evas_Object *valuelabel=edje_object_add(evas);
+            info->valuelabels[i]=valuelabel;
+            edje_object_file_set(valuelabel,themefile, "dlg_valuelabel");
+            evas_object_table_pack(maintable,valuelabel,1,i,1,1);
+            //asprintf(&tempstr,"valuelabel_%d",i);
+            //evas_object_name_set(valuelabel,tempstr);
+            //free(tempstr);
         
-        Evas_Object *valuelabel=edje_object_add(evas);
-        info->valuelabels[i]=valuelabel;
-        edje_object_file_set(valuelabel,themefile, "dlg_valuelabel");
-        evas_object_table_pack(maintable,valuelabel,1,i,1,1);
-        //asprintf(&tempstr,"valuelabel_%d",i);
-        //evas_object_name_set(valuelabel,tempstr);
-        //free(tempstr);
         
-        if(i<numchoices)
-            edje_object_part_text_set(valuelabel,"dlg_valuelabel/text",info->values[i]);
-        else
-            edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
-        
-        evas_object_show(valuelabel);
+            
+            if(i<numchoices)
+                edje_object_part_text_set(valuelabel,"dlg_valuelabel/text",info->values[i]);
+            else
+                edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
+            
+            evas_object_show(valuelabel);
+        }
     }
     
     if(numchoices>noptions)
@@ -369,12 +397,16 @@ void free_choices(choice_info_struct *infostruct)
 {
 	for (int i = 0; i < infostruct->numchoices; i++) {
 		free(infostruct->choices[i]);
-		free(infostruct->values[i]);
+        if(infostruct->values)
+            free(infostruct->values[i]);
 	}
 	free(infostruct->choices);
-	free(infostruct->values);
-    free(infostruct->choicelabels);
-    free(infostruct->valuelabels);
+    if(infostruct->values)
+    {
+        free(infostruct->values);
+    }
+    
+    
 }
 
 void fini_choicebox(Evas *e, Evas_Object *obj, bool redraw)
@@ -393,13 +425,19 @@ void fini_choicebox(Evas *e, Evas_Object *obj, bool redraw)
         evas_object_del(tempobj);
         //free(tempstr);
     }
-    for(int i=0;i<noptions;i++)
+    for(int i=0;i<noptions && infostruct->values;i++)
     {
         //asprintf(&tempstr,"valuelabel_%d",i);
         tempobj=infostruct->valuelabels[i];//evas_object_name_find(e,tempstr);
         evas_object_del(tempobj);
         //free(tempstr);
     }
+    if(infostruct->values)
+    {
+        free(infostruct->valuelabels);
+    }
+    free(infostruct->choicelabels);
+    
     tempobj=infostruct->maintable;//evas_object_name_find(e,"maintable");
     evas_object_del(tempobj);
     evas_object_del(obj);
@@ -414,22 +452,64 @@ void update_choicebox(Evas *e, Evas_Object *obj, const char *choicelist[], const
 {
 	choice_info_struct *info =
 		(choice_info_struct *) evas_object_data_get(obj, "choice_info");
+        
+    if(info->values && !values)
+    {
+        Evas_Object *tempobj;
+        for(int i=0;i<noptions;i++)
+        {
+            tempobj=info->valuelabels[i];
+            evas_object_del(tempobj);
+        }
+        free(info->valuelabels);
+    }
+    else if(!info->values && values)
+    {
+        info->valuelabels=(Evas_Object**)malloc(sizeof(Evas_Object*)*noptions);
+        char *themefile=get_theme_file();
+        for(int i=0;i<noptions;i++)
+        {
+        
+            
+       
+            Evas_Object *valuelabel=edje_object_add(e);
+            info->valuelabels[i]=valuelabel;
+            edje_object_file_set(valuelabel,themefile, "dlg_valuelabel");
+            evas_object_table_pack(info->maintable,valuelabel,1,i,1,1);       
+            
+            if(i<numchoices)
+                edje_object_part_text_set(valuelabel,"dlg_valuelabel/text",info->values[i]);
+            else
+                edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
+            
+            evas_object_show(valuelabel);
 
-	free_choices(info);
-
+        }
+        free(themefile);
+    }
+    free_choices(info);
+    
+    
+    
+    
 	info->numchoices = numchoices;
 	if(rewind || (info->curindex >= numchoices))
 		info->curindex = 0;
 
 	info->choices = (char **) malloc(sizeof(char *) * numchoices);
-	info->values = (char **) malloc(sizeof(char *) * numchoices);
+    if(values)
+        info->values = (char **) malloc(sizeof(char *) * numchoices);
+    else
+        info->values=NULL;
 	for (int i = 0; i < numchoices; i++) {
 		info->choices[i] =
 			(char *) malloc(sizeof(char) * (strlen(choicelist[i]) + 1));
 		asprintf(&(info->choices[i]), "%s", choicelist[i]);
-
-		info->values[i] = (char *)malloc(sizeof(char) * (strlen(values[i]) + 1));
-		asprintf(&(info->values[i]), "%s", values[i]);
+        if(values)
+        {
+            info->values[i] = (char *)malloc(sizeof(char) * (strlen(values[i]) + 1));
+            asprintf(&(info->values[i]), "%s", values[i]);
+        }
 	}
 
 	
@@ -445,17 +525,21 @@ void update_choicebox(Evas *e, Evas_Object *obj, const char *choicelist[], const
         Evas_Object *choicelabel=info->choicelabels[i];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         //asprintf(&tempstr,"valuelabel_%d",i);
+        /* FIX ME! */
         Evas_Object *valuelabel=info->valuelabels[i];//evas_object_name_find(e,tempstr);
         //free(tempstr);
         if(i<shownum)
         {
-            edje_object_part_text_set(choicelabel,"dlg_optionlabel/text",info->choices[info->curindex+i]);
+            if(values)
+                edje_object_part_text_set(choicelabel,"dlg_optionlabel/text",info->choices[info->curindex+i]);
             edje_object_part_text_set(valuelabel,"dlg_valuelabel/text",info->values[info->curindex+i]);
         }
         else
         {
+            
             edje_object_part_text_set(choicelabel,"dlg_optionlabel/text","");
-            edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
+            if(values)
+                edje_object_part_text_set(valuelabel,"dlg_valuelabel/text","");
         }
         
         
@@ -470,11 +554,18 @@ Evas_Object *choicebox_get_parent(Evas *e, Evas_Object *obj)
 	choice_info_struct *infostruct;
 	infostruct =
 		(choice_info_struct *) evas_object_data_get(obj,"choice_info");
-
-	return infostruct->parent;
+    if(infostruct)
+        return infostruct->parent;
+    else
+        return NULL;
 }
-
-
+void *choicebox_get_userdata(Evas *e,Evas_Object *obj)
+{
+    choice_info_struct *infostruct;
+	infostruct = (choice_info_struct *) evas_object_data_get(obj,"choice_info");
+    return infostruct->userdata;
+    
+}
 void update_label(Evas *e, Evas_Object *obj, int number, const char *value)
 {
     choice_info_struct *infostruct;

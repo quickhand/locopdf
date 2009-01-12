@@ -43,7 +43,6 @@ static void _key_handler(void *data, Evas *evas, Evas_Object *obj, void *event_i
     key_handler_info_t* handler_info = (key_handler_info_t*)data;
 
     const char* k = e->keyname;
-
 #define HANDLE_ITEM(h, params, lp) { if(handler_info->h) (*handler_info->h)(evas,obj,params, lp);}
 #define HANDLE_KEY(h) {if(handler_info->h) (*handler_info->h)(evas,obj);}
     if(!strcmp(k, "Return")) {
@@ -67,6 +66,9 @@ static void _key_handler(void *data, Evas *evas, Evas_Object *obj, void *event_i
             	lp = true;
             HANDLE_ITEM(item_handler, k[3]-'0', lp)
         }
+        else if (!strcmp(k, "KP_Add"))        HANDLE_KEY(plus_handler)
+        else if (!strcmp(k, "KP_Subtract"))   HANDLE_KEY(minus_handler)
+            
     }
     else if (!strcmp(k,"Up")) {
         if(nav_mode == 1)            HANDLE_KEY(nav_up_handler)
@@ -79,7 +81,7 @@ static void _key_handler(void *data, Evas *evas, Evas_Object *obj, void *event_i
     else if (!strcmp(k, "Left"))     HANDLE_KEY(nav_left_handler)
     else if (!strcmp(k, "Right"))    HANDLE_KEY(nav_right_handler)
     else if (!strcmp(k, "F2"))       HANDLE_KEY(nav_menubtn_handler)
-    else if (!strcmp(k, "+"))        HANDLE_KEY(shift_handler)
+    
 }
 
 void set_key_handler(Evas_Object* obj, key_handler_info_t* handler_info)

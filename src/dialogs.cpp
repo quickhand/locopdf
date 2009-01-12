@@ -283,7 +283,7 @@ void FitModeDialog(Evas *e, Evas_Object *obj)
         "",
 	};
     
-	fitmodechoicebox=init_choicebox(e,initchoices, values, 5, fitmode_choicehandler, "Fit Mode Settings",obj, true);
+	fitmodechoicebox=init_choicebox(e,initchoices, values, 5, fitmode_choicehandler, "Fit Mode Settings",obj,NULL, true);
     
     int x,y,w,h;
     evas_object_geometry_get(fitmodechoicebox,&x,&y,&w,&h);
@@ -349,7 +349,7 @@ void TrimmingDialog(Evas *e, Evas_Object *obj)
 		bottomtrim,
 	};
     
-	trimmingchoicebox=init_choicebox(e,initchoices, values, 4, trimming_choicehandler, "Trimming Settings",obj, true);
+	trimmingchoicebox=init_choicebox(e,initchoices, values, 4, trimming_choicehandler, "Trimming Settings",obj, NULL,true);
     
     int x,y,w,h;
     evas_object_geometry_get(trimmingchoicebox,&x,&y,&w,&h);
@@ -441,7 +441,7 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
         OFF_ON_STRINGS[get_reader_mode()],
 	};
     
-	preferenceschoicebox=init_choicebox(e,initchoices, values, 7, preferences_choicehandler, "LoCoPDF Settings",obj, true);
+	preferenceschoicebox=init_choicebox(e,initchoices, values, 7, preferences_choicehandler, "LoCoPDF Settings",obj, NULL,true);
     int x,y,w,h;
     evas_object_geometry_get(preferenceschoicebox,&x,&y,&w,&h);
     evas_object_move(preferenceschoicebox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
@@ -450,6 +450,60 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
     free(hpan);
     free(vpan);
 }
+//TOC Choicebox
+void TOCDialog(Evas *e, Evas_Object *obj,Ecore_List *list);
+void toc_choicehandler(Evas *e, Evas_Object *parent,int choice, bool lp)
+{
+    Ecore_List *list=(Ecore_List *)choicebox_get_userdata(e,parent);
+    Epdf_Index_Item *curitem=(Epdf_Index_Item *)ecore_list_index_goto(list,choice);
+    Ecore_List *childlist=epdf_index_item_children_get (curitem);
+    if(!childlist)
+    {
+        Evas_Object *curcb=parent;
+        Evas_Object *nextcb;
+        while((nextcb=choicebox_get_parent(e,curcb)))
+        {
+            fini_choicebox(e,curcb,false);   
+            curcb=nextcb;
+        }
+        evas_object_focus_set(curcb,1);
+        goto_page(epdf_index_item_page_get(get_document(),curitem));
+    }
+    else
+    {
+        TOCDialog(e,parent,childlist);    
+        
+    }
+}
+void TOCDialog(Evas *e, Evas_Object *obj,Ecore_List *list)
+{
+    int numchoices=ecore_list_count(list);
+	char **initchoices;
+    //char **values;
+    initchoices=(char **)malloc(sizeof(char*)*numchoices);
+    //values=(char **)malloc(sizeof(char*)*numchoices);
+    ecore_list_first_goto(list);
+    int i;
+    for(i=0;i<numchoices;i++)
+    {
+        asprintf(&(initchoices[i]),"%d. %s",(i%8+1),epdf_index_item_title_get((Epdf_Index_Item *)ecore_list_next(list)));
+        
+    }
+    
+	Evas_Object *tocchoicebox=init_choicebox(e,(const char**)initchoices,NULL, numchoices, toc_choicehandler, "Table of Contents",obj,(void *)list, true);
+    for(i=0;i<numchoices;i++)
+    {
 
+        free(initchoices[i]);
+    }
+    //free(values);
+    free(initchoices);
+    
+    int x,y,w,h;
+    evas_object_geometry_get(tocchoicebox,&x,&y,&w,&h);
+    evas_object_move(tocchoicebox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));
+    
+
+}
 
 
