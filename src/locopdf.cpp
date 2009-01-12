@@ -52,6 +52,7 @@ Epdf_Document *document;
 Epdf_Page     *page;
 Ecore_List *pdf_index;
 char          *filename;
+pthread_mutex_t pdf_renderer_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int numpages;
 int curpage=0;
@@ -209,7 +210,10 @@ Epdf_Document *get_document()
 void render_cur_page()
 {
     char pdfobjstr[20];
-    sprintf(pdfobjstr,"pdfobj%d",curpdfobj);    
+    sprintf(pdfobjstr,"pdfobj%d",curpdfobj);
+
+    pthread_mutex_lock(&pdf_renderer_mutex);
+
     Evas_Object *pdfobj=evas_object_name_find(evas,pdfobjstr);
     epdf_page_page_set(page,curpage);
     int width,height;
@@ -271,12 +275,17 @@ void render_cur_page()
                              
         
     }
+
+    pthread_mutex_unlock(&pdf_renderer_mutex);
+
     //fprintf(stderr,"\nwidth=%d,height=%d,ltrim=%d,rtrim=%d,ttrim=%d,btrim=%d,fwzoom=%f,fhzoom=%f\n",width,height,lefttrim,righttrim,toptrim,bottomtrim,fitwidthzoom,fitheightzoom);
 }
 void *thread_func(void *vptr_args)
 {
     if(curpage>=(numpages-1))
         return NULL;
+
+    pthread_mutex_lock(&pdf_renderer_mutex);
 
     Evas_Object *pdfobj;
     if(curpdfobj==1)
@@ -344,6 +353,9 @@ void *thread_func(void *vptr_args)
         
     }
     //prerendering=0;
+
+    pthread_mutex_unlock(&pdf_renderer_mutex);
+
     return NULL;
 
 }
@@ -768,7 +780,8 @@ int main(int argc, char *argv[])
     evas_object_show(bg);
     
 
-
+    /* mutex for epdf access */
+    pthread_mutex_init(&pdf_renderer_mutex, NULL);
     
     filename=argv[1];
     document = epdf_document_new (argv[1]);
@@ -847,6 +860,8 @@ int main(int argc, char *argv[])
     epdf_index_delete(pdf_index);
     epdf_page_delete (page);
     epdf_document_delete (document);
+
+    pthread_mutex_destroy(&pdf_renderer_mutex);
     
     
     edje_shutdown();
