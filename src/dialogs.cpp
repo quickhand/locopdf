@@ -161,6 +161,7 @@ void lefttrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
         free(value);
         render_cur_page();
         prerender_next_page();
+        update_statusbar();
     }
     
 }
@@ -187,6 +188,7 @@ void righttrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
         free(value);
         render_cur_page();
         prerender_next_page();
+        update_statusbar();
     }
 }
 
@@ -212,6 +214,7 @@ void toptrim_entryhandler(Evas *e, Evas_Object *obj,char *value)
         free(value);
         render_cur_page();
         prerender_next_page();
+        update_statusbar();
     }
 }
 
@@ -261,6 +264,7 @@ void fitmode_choicehandler(Evas *e, Evas_Object *parent,int choice, bool lp)
         fini_choicebox(e,parent,false);
         render_cur_page();
         prerender_next_page();
+        update_statusbar();
     }
 }
 
@@ -407,6 +411,11 @@ void preferences_choicehandler(Evas *e, Evas_Object *parent,int choice, bool lp)
         set_reader_mode(!get_reader_mode());
         update_label(e,preferenceschoicebox,6,OFF_ON_STRINGS[get_reader_mode()]);
     }
+    else if(choice==7)
+    {
+        set_statusbar_visible(!get_statusbar_visible());
+        update_label(e,preferenceschoicebox,7,OFF_ON_STRINGS[get_statusbar_visible()]);
+    }
 }
 
 void PreferencesDialog(Evas *e, Evas_Object *obj)
@@ -419,6 +428,7 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
         "5. Fit Mode",
         "6. Antialias",
         "7. Reader Mode",
+        "8. Status Bar",
 	};
     
     
@@ -439,9 +449,10 @@ void PreferencesDialog(Evas *e, Evas_Object *obj)
         FIT_STRINGS[get_fit_mode()],
         OFF_ON_STRINGS[get_antialias_mode()],
         OFF_ON_STRINGS[get_reader_mode()],
+        OFF_ON_STRINGS[get_statusbar_visible()],
 	};
     
-	preferenceschoicebox=init_choicebox(e,initchoices, values, 7, preferences_choicehandler, "LoCoPDF Settings",obj, NULL,true);
+	preferenceschoicebox=init_choicebox(e,initchoices, values, 8, preferences_choicehandler, "LoCoPDF Settings",obj, NULL,true);
     int x,y,w,h;
     evas_object_geometry_get(preferenceschoicebox,&x,&y,&w,&h);
     evas_object_move(preferenceschoicebox,(int)(((double)get_win_width()-w)/2.0),(int)(((double)get_win_height()-h)/2.0));

@@ -27,6 +27,9 @@
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
+#include <stdio.h>
+#include <string.h>
+
 #include <Evas.h>
 #include <Ecore.h>
 #include <Ecore_File.h>
@@ -65,6 +68,8 @@ double zoominc=0.1;
 double hpaninc=0.5;
 double vpaninc=0.5;
 
+unsigned char statusbar_visible=1;
+
 int lefttrim=0;
 int righttrim=0;
 int toptrim=0;
@@ -94,6 +99,23 @@ int get_win_width()
 int get_win_height()
 {
     return winheight;    
+}
+int get_docview_width()
+{
+    return get_win_width();
+}
+int get_docview_height()
+{
+    if(statusbar_visible)
+    {
+        Evas_Object *statusbar;
+        statusbar=evas_object_name_find(evas,"statusbar");
+        int x,y,w,h;
+        evas_object_geometry_get(statusbar,&x,&y,&w,&h);
+        return get_win_height()-h;
+    }
+    return get_win_height();
+    
 }
 double get_zoom_inc()
 {
@@ -198,6 +220,7 @@ void goto_page(int newpage)
     reset_cur_panning();
     render_cur_page();
     prerender_next_page();
+    
 }
 int get_cur_page()
 {
@@ -218,8 +241,8 @@ void render_cur_page()
     epdf_page_page_set(page,curpage);
     int width,height;
     epdf_page_size_get (page, &width, &height);
-    double fitwidthzoom=((double)get_win_width())/((double)(width-lefttrim-righttrim))*zoom;
-    double fitheightzoom=((double)get_win_height())/((double)(height-toptrim-bottomtrim))*zoom;
+    double fitwidthzoom=((double)get_docview_width())/((double)(width-lefttrim-righttrim))*zoom;
+    double fitheightzoom=((double)get_docview_height())/((double)(height-toptrim-bottomtrim))*zoom;
     
     
     double scalex;
@@ -296,8 +319,8 @@ void *thread_func(void *vptr_args)
     int width,height;
     epdf_page_size_get (page, &width, &height);
     //epdf_page_scale_set (page,((double)get_win_width())/((double)width)*zoom,((double)get_win_height())/((double)height)*zoom);
-    double fitwidthzoom=((double)get_win_width())/((double)(width-lefttrim-righttrim))*zoom;
-    double fitheightzoom=((double)get_win_height())/((double)(height-toptrim-bottomtrim))*zoom;
+    double fitwidthzoom=((double)get_docview_width())/((double)(width-lefttrim-righttrim))*zoom;
+    double fitheightzoom=((double)get_docview_height())/((double)(height-toptrim-bottomtrim))*zoom;
     
     double scalex;
     double scaley;
@@ -362,15 +385,131 @@ void *thread_func(void *vptr_args)
 int are_legal_coords(int x1,int y1,int x2,int y2)
 {
     
-    int xs_in_range=((x1>0&&x1<get_win_width())||(x2>0&&x2<get_win_width()));
-    int ys_in_range=((y1>0&&y1<get_win_height())||(y2>0&&y2<get_win_height()));
-    int xs_opposite=(x1<=0&&x2>=get_win_width());
-    int ys_opposite=(y1<=0&&y2>=get_win_height());
+    int xs_in_range=((x1>0&&x1<get_docview_width())||(x2>0&&x2<get_docview_width()));
+    int ys_in_range=((y1>0&&y1<get_docview_height())||(y2>0&&y2<get_docview_height()));
+    int xs_opposite=(x1<=0&&x2>=get_docview_width());
+    int ys_opposite=(y1<=0&&y2>=get_docview_height());
     if((ys_in_range && xs_in_range) || (ys_in_range&& xs_opposite) || (xs_in_range && ys_opposite) || (xs_opposite && ys_opposite))
         return 1;
     return 0;
     
     
+}
+int can_pan_right()
+{
+    Evas_Object *pdfobj;
+    if(curpdfobj==1)
+        pdfobj=evas_object_name_find(evas,"pdfobj1");
+    else
+        pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+    int x,y,w,h;
+    evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+    int panpx=(-1)*ROUND(((double)get_docview_height())*hpaninc);
+    return are_legal_coords(x+panpx,y,x+w+panpx,y+h);
+    
+    
+}
+int can_pan_left()
+{
+    Evas_Object *pdfobj;
+    if(curpdfobj==1)
+        pdfobj=evas_object_name_find(evas,"pdfobj1");
+    else
+        pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+    int x,y,w,h;
+    evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+    int panpx=ROUND(((double)get_docview_height())*hpaninc);
+    return are_legal_coords(x+panpx,y,x+w+panpx,y+h);
+    
+}
+int can_pan_up()
+{
+    Evas_Object *pdfobj;
+    if(curpdfobj==1)
+        pdfobj=evas_object_name_find(evas,"pdfobj1");
+    else
+        pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+    int x,y,w,h;
+    evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+    int panpx=ROUND(((double)get_docview_height())*vpaninc);
+    return are_legal_coords(x,y+panpx,x+w,y+panpx+h);
+    
+}
+int can_pan_down()
+{
+    Evas_Object *pdfobj;
+    if(curpdfobj==1)
+        pdfobj=evas_object_name_find(evas,"pdfobj1");
+    else
+        pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+    int x,y,w,h;
+    evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+    int panpx=(-1)*ROUND(((double)get_docview_height())*vpaninc);
+    return are_legal_coords(x,y+panpx,x+w,y+panpx+h);
+    
+    
+    
+}
+void update_statusbar()
+{
+    Evas_Object *statusbar;
+    statusbar=evas_object_name_find(evas,"statusbar");
+    
+    char pantext[30];
+    pantext[0]='\0';
+    if(can_pan_up())
+        strcat(pantext,"↑");
+    if(can_pan_left())
+        strcat(pantext,"←");
+    if(can_pan_down())
+        strcat(pantext,"↓");
+    if(can_pan_right())
+        strcat(pantext,"→");
+    
+    
+    char *zoomtext;
+    char *pagetext;
+    asprintf(&zoomtext,"%d%%",(int)((zoom*100)+0.5));
+    asprintf(&pagetext,"%d/%d",get_cur_page()+1,get_num_pages());
+    edje_object_part_text_set(statusbar,"statusbar/pantext",pantext);
+    edje_object_part_text_set(statusbar,"statusbar/zoomtext",zoomtext);
+    edje_object_part_text_set(statusbar,"statusbar/pagetext",pagetext);
+    
+    Edje_Message_Float msg;
+    if(get_cur_page()==(get_num_pages()-1))
+        msg.val=1.0;
+    else
+        msg.val = ((double)get_cur_page())/((double)get_num_pages());
+    edje_object_message_send(statusbar, EDJE_MESSAGE_FLOAT, 1, &msg);
+    free(zoomtext);
+    free(pagetext);
+}
+void set_statusbar_visible(unsigned char visible)
+{
+    int original_vpanpx=ROUND(((double)get_docview_height())*vpaninc);
+    Evas_Object *pdfobj;
+    if(curpdfobj==1)
+        pdfobj=evas_object_name_find(evas,"pdfobj1");
+    else
+        pdfobj=evas_object_name_find(evas,"pdfobj2"); 
+    int x,y,w,h;
+    evas_object_geometry_get(pdfobj,&x,&y,&w,&h);
+    
+    Evas_Object *statusbar;
+    statusbar=evas_object_name_find(evas,"statusbar");
+    if(visible)
+        evas_object_show(statusbar);
+    else
+        evas_object_hide(statusbar);
+    statusbar_visible=visible;
+    int new_vpanpx=ROUND(((double)get_docview_height())*vpaninc);
+    evas_object_move(pdfobj,x,(y/original_vpanpx)*new_vpanpx);
+    render_cur_page();
+    prerender_next_page();
+}
+unsigned char get_statusbar_visible()
+{
+    return statusbar_visible;
 }
 void pan_cur_page(int panx,int pany)
 {
@@ -385,6 +524,7 @@ void pan_cur_page(int panx,int pany)
     
     if(are_legal_coords(x+panx,y+pany,x+w+panx,y+h+pany))
         evas_object_move (pdfobj,x+panx,y+pany);
+    update_statusbar();
 }
 
 void reset_cur_panning()
@@ -394,7 +534,8 @@ void reset_cur_panning()
         pdfobj=evas_object_name_find(evas,"pdfobj1");
     else
         pdfobj=evas_object_name_find(evas,"pdfobj2"); 
-    evas_object_move (pdfobj,0,0);    
+    evas_object_move (pdfobj,0,0);   
+    update_statusbar();
 }
 void reset_next_panning()
 {
@@ -449,8 +590,7 @@ void next_page()
     reset_next_panning();
     flip_pages();
     prerender_next_page();
-
-
+    update_statusbar();
 }
 void prev_page()
 {
@@ -461,6 +601,7 @@ void prev_page()
     render_cur_page();
     
     prerender_next_page();
+    update_statusbar();
 }
 
 /* GUI */
@@ -496,6 +637,7 @@ void main_plus(Evas *e, Evas_Object *obj)
         render_cur_page();
         prerender_next_page();
     }
+    update_statusbar();
 }
 void main_minus(Evas *e, Evas_Object *obj)
 {
@@ -516,6 +658,7 @@ void main_minus(Evas *e, Evas_Object *obj)
             render_cur_page();
             prerender_next_page();
         }
+        update_statusbar();
     }
 }
 void main_nav_up(Evas *e, Evas_Object *obj)
@@ -539,7 +682,7 @@ void main_nav_right(Evas *e, Evas_Object *obj)
     if(readermode)
     {
         Evas_Object *pdfobj;
-        int pan_amt=(-1)*ROUND(((double)get_win_height())*vpaninc);
+        int pan_amt=(-1)*ROUND(((double)get_docview_height())*vpaninc);
         if(curpdfobj==1)
             pdfobj=evas_object_name_find(evas,"pdfobj1");
         else
@@ -582,7 +725,7 @@ void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
     {
        
         
-        pan_cur_page(0,ROUND(((double)get_win_height())*vpaninc));
+        pan_cur_page(0,ROUND(((double)get_docview_height())*vpaninc));
     }
     else if(index==3)
     {
@@ -604,19 +747,19 @@ void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
     {
           
         
-        pan_cur_page(ROUND(((double)get_win_width())*hpaninc),0);
+        pan_cur_page(ROUND(((double)get_docview_width())*hpaninc),0);
     }
     else if(index==7)
     {
         
         
-        pan_cur_page(0,(-1)*ROUND(((double)get_win_height())*vpaninc));
+        pan_cur_page(0,(-1)*ROUND(((double)get_docview_height())*vpaninc));
     }
     else if(index==8)
     {
         
         
-        pan_cur_page((-1)*ROUND(((double)get_win_width())*hpaninc),0);
+        pan_cur_page((-1)*ROUND(((double)get_docview_width())*hpaninc),0);
     }
     else if(index==9)
     {
@@ -628,7 +771,7 @@ void main_item(Evas *e, Evas_Object *obj,int index, bool lp)
         if(readermode)
         {
             Evas_Object *pdfobj;
-            int pan_amt=(-1)*ROUND(((double)get_win_height())*vpaninc);
+            int pan_amt=(-1)*ROUND(((double)get_docview_height())*vpaninc);
             if(curpdfobj==1)
                 pdfobj=evas_object_name_find(evas,"pdfobj1");
             else
@@ -675,6 +818,7 @@ void save_global_settings(char *filename)
     set_setting_INT(filename,"bottom_trim",bottomtrim);
     set_setting_INT(filename,"fit_mode",fitmode);
     set_setting_INT(filename,"reader_mode",readermode);
+    set_setting_INT(filename,"statusbar_visible",statusbar_visible);
 }
 void restore_global_settings(char *filename)
 {
@@ -723,13 +867,18 @@ void restore_global_settings(char *filename)
     {
         fitmode=temp11;    
     }
+    temp11=get_setting_INT(filename,"statusbar_visible");
+    if(temp11==0 || temp11==1)
+    {
+        statusbar_visible=temp11;    
+    }
 }
 
 int main(int argc, char *argv[])
 {
     Ecore_Evas *ee;
     
-    Evas_Object *bg,*o1,*o2;
+    Evas_Object *bg,*o1,*o2,*statusbar;
 
     /* initialize our libraries */
     evas_init();
@@ -831,9 +980,27 @@ int main(int argc, char *argv[])
             set_antialias_mode(am);
     }
     
+    
+    statusbar=edje_object_add(evas);
+    char *themefile=get_theme_file();
+
+    edje_object_file_set(statusbar,themefile, "statusbar");
+    int edje_w,edje_h;
+    edje_object_size_min_get(statusbar, &edje_w, &edje_h);
+    evas_object_resize(statusbar,get_win_width(),edje_h);
+    evas_object_move(statusbar,0,get_win_height()-edje_h);
+    evas_object_name_set(statusbar, "statusbar");
+    if(statusbar_visible)
+        evas_object_show(statusbar);
+
+    //evas_object_stack_above(statusbar,evas_object_top_get(evas));
+    
+    free(themefile);
+    
+    
     render_cur_page();
     prerender_next_page();
-    
+    update_statusbar();
 
     /* start the main event loop */
     ecore_main_loop_begin();

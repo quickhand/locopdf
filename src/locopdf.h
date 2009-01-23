@@ -36,6 +36,10 @@ int get_num_pages();
 void goto_page(int newpage);
 int get_cur_page();
 Epdf_Document *get_document();
+void update_statusbar();
+void set_statusbar_visible(unsigned char visible);
+unsigned char get_statusbar_visible();
+
 
 void render_cur_page();
 void prerender_next_page();
